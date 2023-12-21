@@ -7,7 +7,7 @@ CC_FLAGS = -Wall -g -O2
 CC_LIBS = -lm
 # NVCC compiler options:
 NVCC = nvcc
-NVCC_FLAGS = -O2 -arch=sm_50 # For GTX750Ti
+NVCC_FLAGS = -O2 -arch=sm_50 -gencode=arch=compute_50,code=sm_50 -Wno-deprecated-gpu-targets
 NVCC_LIBS = -lm
 # CUDA library directory:
 CUDA_LIB_DIR = -L$(CUDA_ROOT_DIR)/lib64

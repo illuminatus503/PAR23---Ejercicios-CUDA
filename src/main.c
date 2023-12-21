@@ -42,12 +42,12 @@ int main(int argc, char *argv[])
     // Imprimimos el t. eje. en CPU de FMADD
     time_cpu = fmadd_CPU(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
     printf("\nD_cpu (tej = %3.3f ms) = A · B + C \n", time_cpu);
-    matrix_print(D_cpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
+    // matrix_print(D_cpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
 
     // Imprimimos el t. eje. en GPU de FMADD
     time_gpu = fmadd_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
     printf("\nD_gpu (tej = %3.3f ms) = A · B + C \n", time_gpu);
-    matrix_print(D_gpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
+    // matrix_print(D_gpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
 
     printf("\nMIDIENDO LAS DIFERENCIAS ENTRE CPU Y GPU: \n");
     printf("||D_cpu - D_gpu||_inf = %3.3f\n",

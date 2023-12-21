@@ -7,8 +7,8 @@
 #include "../include/codeCPU.h"
 #include "../include/codeGPU.cuh"
 
-#define TILE_SIZE 16      // Tile de 16x16 hilos, por bloque
-#define THR_PER_BLOCK 256 // Número de hilos por bloque
+#define TILE_SIZE 32     // Tile de T x T hilos, por bloque: se recomienda que TILE_SIZE == THR_PER_BLOCK
+#define THR_PER_BLOCK 32 // Número de hilos por bloque
 
 __global__ void cuda_matmul_global(float *A_, float *B_, float *C_, float *D,
                                    int N, int M, int P)
@@ -47,9 +47,9 @@ __global__ void cuda_matmul_global(float *A_, float *B_, float *C_, float *D,
 __global__ void cuda_matmul_sharedmem(float *A_, float *B_, float *C_, float *D,
                                       int N, int M, int P)
 {
-    int i, j, k;
+    int i, j, k, K;
     int tile_, tile_i, tile_j;
-    float sum;
+    float sum = 0.0;
 
     // Inicializamos los tiles de A_ y B_
     __shared__ float A_shared[TILE_SIZE][TILE_SIZE];
@@ -59,8 +59,6 @@ __global__ void cuda_matmul_sharedmem(float *A_, float *B_, float *C_, float *D,
     i = blockIdx.y * blockDim.y + threadIdx.y;
     j = blockIdx.x * blockDim.x + threadIdx.x;
 
-    // Calculamos la suma
-    sum = C_[i * P + j];
     for (tile_ = 0; tile_ < (M - 1) / TILE_SIZE + 1; tile_++)
     {
         // Load de la submatriz A_shared
@@ -87,7 +85,9 @@ __global__ void cuda_matmul_sharedmem(float *A_, float *B_, float *C_, float *D,
 
         __syncthreads();
 
-        for (k = 0; k < TILE_SIZE; k++)
+        // Ajuste en el bucle de multiplicación para manejar el caso de baldosas parciales
+        K = (tile_ == (M - 1) / TILE_SIZE) ? M % TILE_SIZE : TILE_SIZE;
+        for (k = 0; k < K; k++)
         {
             sum += A_shared[threadIdx.y][k] * B_shared[k][threadIdx.x];
         }
@@ -98,7 +98,7 @@ __global__ void cuda_matmul_sharedmem(float *A_, float *B_, float *C_, float *D,
     // Escritura en mem. global de device (una sola vez)
     if (i < N && j < P)
     {
-        D[i * P + j] = sum;
+        D[i * P + j] = sum + C_[i * P + j];
     }
 }
 
@@ -110,15 +110,15 @@ double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
      */
     cudaEvent_t start, stop;
     float exe_time_ms = 0.0;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+    gpuErrchk(cudaEventCreate(&start));
+    gpuErrchk(cudaEventCreate(&stop));
 
     /**
      * Variables de mem. device
      */
-    const unsigned int size_A = N * M * sizeof(float);
-    const unsigned int size_B = M * P * sizeof(float);
-    const unsigned int size_C = N * P * sizeof(float);
+    const size_t size_A = N * M * sizeof(float);
+    const size_t size_B = M * P * sizeof(float);
+    const size_t size_C = N * P * sizeof(float);
     float *d_A, *d_B, *d_C, *d_D;
 
     gpuErrchk(cudaMalloc((void **)&d_A, size_A));
@@ -127,9 +127,9 @@ double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
     gpuErrchk(cudaMalloc((void **)&d_D, size_C));
 
     // Copiamos los datos necesarios para las matrices A, B y C
-    gpuErrchk(cudaMemcpy(d_A, A_, size_A, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_B, B_, size_B, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy(d_C, C_, size_C, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_A, (const void *)A_, size_A, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_B, (const void *)B_, size_B, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C_, size_C, cudaMemcpyHostToDevice));
 
     // Set execution configuration parameters
     //      threadsPerBlock: number of CUDA threads per grid block
@@ -140,21 +140,22 @@ double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
 
     // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_matmul_global<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
+    cuda_matmul_sharedmem<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
+    cudaCheckError(); // Check error after execution
     gpuErrchk(cudaEventRecord(stop));
 
     // Copy data from device array to host array
-    cudaMemcpy(D, d_D, size_C, cudaMemcpyDeviceToHost);
-    cudaEventSynchronize(stop);
-    cudaEventElapsedTime(&exe_time_ms, start, stop);
+    gpuErrchk(cudaMemcpy((void *)D, (const void *)d_D, size_C, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaEventSynchronize(stop));
+    gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
 
     /**
      * Free CUDA mem.
      */
-    cudaFree(d_A);
-    cudaFree(d_B);
-    cudaFree(d_C);
-    cudaFree(d_D);
+    gpuErrchk(cudaFree(d_A));
+    gpuErrchk(cudaFree(d_B));
+    gpuErrchk(cudaFree(d_C));
+    gpuErrchk(cudaFree(d_D));
 
     return (double)exe_time_ms;
 }
