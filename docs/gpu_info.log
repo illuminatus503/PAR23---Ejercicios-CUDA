@@ -1,0 +1,43 @@
+ par08@ares:~/PAR23---Ejercicios-CUDA$ nvidia-smi
+Fri Dec 22 16:00:00 2023       
++-----------------------------------------------------------------------------+
+| NVIDIA-SMI 510.85.02    Driver Version: 510.85.02    CUDA Version: 11.6     |
+|-------------------------------+----------------------+----------------------+
+| GPU  Name        Persistence-M| Bus-Id        Disp.A | Volatile Uncorr. ECC |
+| Fan  Temp  Perf  Pwr:Usage/Cap|         Memory-Usage | GPU-Util  Compute M. |
+|                               |                      |               MIG M. |
+|===============================+======================+======================|
+|   0  Quadro RTX 4000     Off  | 00000000:02:00.0 Off |                  N/A |
+| 30%   44C    P8    18W / 125W |      1MiB /  8192MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+|   1  Quadro RTX 4000     Off  | 00000000:03:00.0 Off |                  N/A |
+| 30%   32C    P8     2W / 125W |      1MiB /  8192MiB |      0%      Default |
+|                               |                      |                  N/A |
++-------------------------------+----------------------+----------------------+
+                                                                               
++-----------------------------------------------------------------------------+
+| Processes:                                                                  |
+|  GPU   GI   CI        PID   Type   Process name                  GPU Memory |
+|        ID   ID                                                   Usage      |
+|=============================================================================|
+|  No running processes found                                                 |
++-----------------------------------------------------------------------------+
+_________________________________________________________________________________________
+
+Web: https://www.nvidia.com/content/dam/en-zz/Solutions/design-visualization/quadro-product-literature/quadro-rtx-4000-data-sheet-us-nvidia-830682-r6-web.pdf
+_________________________________________________________________________________________
+
+** GPU analysis ** 
+- NUM GPUS: 2
+! GPU ID: 0  [Free mem. (MB)= 7887 / Total mem. (MB) = 7982]
+** Num. Streaming Multiprocessors (SM) = 36
+** Shared memory per block (KB) = 48
+** Max. threads per block = 1024 | Per dim. {max. x, max. y, max. z} = {1024, 1024, 64}
+** Max. grid size: {max. x, max. y, max. z} = {2147483647, 65535, 65535}
+! GPU ID: 1  [Free mem. (MB)= 7887 / Total mem. (MB) = 7982]
+** Num. Streaming Multiprocessors (SM) = 36
+** Shared memory per block (KB) = 48
+** Max. threads per block = 1024 | Per dim. {max. x, max. y, max. z} = {1024, 1024, 64}
+** Max. grid size: {max. x, max. y, max. z} = {2147483647, 65535, 65535}
+** END **

@@ -1,17 +1,15 @@
+#include <cuda.h>
+#include <cuda_runtime.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <cuda.h>
-// #include <cuda_runtime.h>
+#include "../include/utilities_CPU.h"
+#include "../include/errchk_GPU.cuh"
+#include "../include/matmul_naive_GPU.cuh"
 
-#include "../include/codeCPU.h"
-#include "../include/codeGPU.cuh"
-
-#define TILE_SIZE 32     // Tile de T x T hilos, por bloque: se recomienda que TILE_SIZE == THR_PER_BLOCK
-#define THR_PER_BLOCK 32 // Número de hilos por bloque
-
-__global__ void cuda_matmul_global(float *A_, float *B_, float *C_, float *D,
-                                   int N, int M, int P)
+__global__ void cuda_fma_global(float *A_, float *B_, float *C_, float *D,
+                                int N, int M, int P)
 {
     int i, j, k;
     float sum;
@@ -44,66 +42,8 @@ __global__ void cuda_matmul_global(float *A_, float *B_, float *C_, float *D,
     D[i * P + j] = sum; // solo escribimos una vez en mem. global de device
 }
 
-__global__ void cuda_matmul_sharedmem(float *A_, float *B_, float *C_, float *D,
-                                      int N, int M, int P)
-{
-    int i, j, k, K;
-    int tile_, tile_i, tile_j;
-    float sum = 0.0;
-
-    // Inicializamos los tiles de A_ y B_
-    __shared__ float A_shared[TILE_SIZE][TILE_SIZE];
-    __shared__ float B_shared[TILE_SIZE][TILE_SIZE];
-
-    // Calculamos los índices i, j de la matriz D
-    i = blockIdx.y * blockDim.y + threadIdx.y;
-    j = blockIdx.x * blockDim.x + threadIdx.x;
-
-    for (tile_ = 0; tile_ < (M - 1) / TILE_SIZE + 1; tile_++)
-    {
-        // Load de la submatriz A_shared
-        tile_j = tile_ * TILE_SIZE + threadIdx.x;
-        if (i < N && tile_j < M)
-        {
-            A_shared[threadIdx.y][threadIdx.x] = A_[i * M + tile_j];
-        }
-        else
-        {
-            A_shared[threadIdx.y][threadIdx.x] = 0.0;
-        }
-
-        // Load de la submatriz B_shared
-        tile_i = tile_ * TILE_SIZE + threadIdx.y;
-        if (tile_i < M && j < P)
-        {
-            B_shared[threadIdx.y][threadIdx.x] = B_[tile_i * P + j];
-        }
-        else
-        {
-            B_shared[threadIdx.y][threadIdx.x] = 0.0;
-        }
-
-        __syncthreads();
-
-        // Ajuste en el bucle de multiplicación para manejar el caso de baldosas parciales
-        K = (tile_ == (M - 1) / TILE_SIZE) ? M % TILE_SIZE : TILE_SIZE;
-        for (k = 0; k < K; k++)
-        {
-            sum += A_shared[threadIdx.y][k] * B_shared[k][threadIdx.x];
-        }
-
-        __syncthreads();
-    }
-
-    // Escritura en mem. global de device (una sola vez)
-    if (i < N && j < P)
-    {
-        D[i * P + j] = sum + C_[i * P + j];
-    }
-}
-
-double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
-                   int N, int M, int P)
+double __fma_naive_GPU(float *A_, float *B_, float *C_, float *D,
+                       int N, int M, int P)
 {
     /**
      * Medición de tiempos
@@ -140,7 +80,7 @@ double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
 
     // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_matmul_sharedmem<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
+    cuda_fma_global<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
     cudaCheckError(); // Check error after execution
     gpuErrchk(cudaEventRecord(stop));
 
@@ -160,10 +100,10 @@ double __fmadd_GPU(float *A_, float *B_, float *C_, float *D,
     return (double)exe_time_ms;
 }
 
-double fmadd_GPU(float *A_, int N1, int M1,
-                 float *B_, int N2, int M2,
-                 float *C_, int N3, int M3,
-                 float *D, int N, int M)
+double fma_naive_GPU(float *A_, int N1, int M1,
+                     float *B_, int N2, int M2,
+                     float *C_, int N3, int M3,
+                     float *D, int N, int M)
 {
     if (!matrix_checkdims(N1, M1, N2, M2, N3, M3, N, M))
     {
@@ -173,5 +113,5 @@ double fmadd_GPU(float *A_, int N1, int M1,
         return 0.0; // Asum. que el checkeo no añade sobrecostes
     }
 
-    return __fmadd_GPU(A_, B_, C_, D, N, M1, M);
+    return __fma_naive_GPU(A_, B_, C_, D, N, M1, M);
 }

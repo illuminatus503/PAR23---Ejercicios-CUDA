@@ -3,16 +3,8 @@
 #include <time.h>
 #include <math.h>
 
-#include "../include/codeCPU.h"
+#include "../include/utilities_CPU.h"
 
-/**
- * @brief A partir de dos struct timestep, calcula el tiempo
- * de ejecución en ms.
- *
- * @param begin Medición al comienzo de la ejecución.
- * @param end Medición al final de la ejecución.
- * @return double Diferencia de tiempo entre mediciones, en ms.
- */
 double timing_CPU(struct timespec begin, struct timespec end)
 {
     return ((end.tv_sec - begin.tv_sec) * 1e3 + ((end.tv_nsec - begin.tv_nsec) * 1e-6));
@@ -68,44 +60,6 @@ bool matrix_checkdims(int N1, int M1, int N2, int M2, int N3, int M3, int N, int
         return 0;
 
     return 1;
-}
-
-double __fmadd_CPU(float *A_, float *B_, float *C_, float *D, int N, int M, int P)
-{
-    int i, j, k;
-    struct timespec begin, end;
-
-    clock_gettime(CLOCK_MONOTONIC, &begin);
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < P; j++)
-        {
-            D[i * P + j] = C_[i * P + j];
-            for (k = 0; k < M; k++)
-            {
-                D[i * P + j] += A_[i * M + k] * B_[k * P + j];
-            }
-        }
-    }
-    clock_gettime(CLOCK_MONOTONIC, &end);
-
-    return timing_CPU(begin, end);
-}
-
-double fmadd_CPU(float *A_, int N1, int M1,
-                 float *B_, int N2, int M2,
-                 float *C_, int N3, int M3,
-                 float *D, int N, int M)
-{
-    if (!matrix_checkdims(N1, M1, N2, M2, N3, M3, N, M))
-    {
-        fprintf(stderr,
-                "[DimError] La dimensiones de las matrices no coinciden: A(%d x %d) · B(%d x %d) + C(%d x %d) = D(%d x %d)\n",
-                N1, M1, N2, M2, N3, M3, N, M);
-        return 0.0; // Asum. que el checkeo no añade sobrecostes
-    }
-
-    return __fmadd_CPU(A_, B_, C_, D, N, M1, M);
 }
 
 void matrix_print(float *A_, int N, int M)

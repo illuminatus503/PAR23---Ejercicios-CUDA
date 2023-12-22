@@ -1,12 +1,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/codeCPU.h"
-#include "../include/codeGPU.cuh"
+// CPU imports
+#include "../include/utilities_CPU.h"
+#include "../include/matmul_CPU.h"
+
+// GPU imports
+#include "../include/info_GPU.cuh"
+#include "../include/matmul_naive_GPU.cuh"
+#include "../include/matmul_sharedmem_GPU.cuh"
 
 int main(int argc, char *argv[])
 {
-    double time_gpu, time_cpu;
+    double time_naive_gpu, time_sharedmem_gpu, time_cpu;
     float *A, *B, *C, *D_cpu, *D_gpu;
 
     if (argc != 4)
@@ -23,6 +29,12 @@ int main(int argc, char *argv[])
     unsigned int M = strtoul(argv[2], NULL, 10);
     unsigned int P = strtoul(argv[3], NULL, 10);
 
+    /**
+     * @brief Ejecución del diagnóstico de las GPUs del sistema.
+     *
+     */
+    print_gpu_info();
+
     // Declaramos & init. las matrices en mem. din.
     A = (float *)malloc(N * M * sizeof(float));
     B = (float *)malloc(M * P * sizeof(float));
@@ -31,27 +43,26 @@ int main(int argc, char *argv[])
     D_gpu = (float *)calloc(N * P, sizeof(float));
     gen_matrices(N, M, P, A, B, C);
 
-    // Imprimimos el contenido de las matrices
-    // printf("A = \n");
-    // matrix_print(A, N, M);
-    // printf("\nB = \n");
-    // matrix_print(B, M, P);
-    // printf("\nC = \n");
-    // matrix_print(C, N, P);
+    /**
+     * @brief Ejecución de los tests sobre multiplicaciones
+     *
+     */
+    printf("Operation, Exec. time (ms), ||·||_inf / CPU vs GPU\n");
 
-    // Imprimimos el t. eje. en CPU de FMADD
-    time_cpu = fmadd_CPU(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
-    printf("\nD_cpu (tej = %3.3f ms) = A · B + C \n", time_cpu);
-    // matrix_print(D_cpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
+    // ! FMA en CPU
+    time_cpu = fma_CPU(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
+    printf("FMA (CPU), %3.3f, 0.0\n",
+           time_cpu);
 
-    // Imprimimos el t. eje. en GPU de FMADD
-    time_gpu = fmadd_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
-    printf("\nD_gpu (tej = %3.3f ms) = A · B + C \n", time_gpu);
-    // matrix_print(D_gpu, N, P); // Ojo! Si son matrices muy grandes no se verán bien los resultados.
+    // ! FMA en GPU (naïve)
+    time_naive_gpu = fma_naive_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+    printf("FMA (GPU, naïve), %3.3f, %3.3f\n",
+           time_naive_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
 
-    printf("\nMIDIENDO LAS DIFERENCIAS ENTRE CPU Y GPU: \n");
-    printf("||D_cpu - D_gpu||_inf = %3.3f\n",
-           matrix_infty_dist(D_cpu, D_gpu, N, P));
+    // ! FMA en GPU (shared mem.)
+    time_sharedmem_gpu = fma_sharedmem_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+    printf("FMA (GPU, shared mem.), %3.3f, %3.3f\n",
+           time_sharedmem_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
 
     // Liberamos la mem. din. reservada
     free(A);
