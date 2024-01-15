@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 #include "../include/utils.h"
+
 #include "../include/fadd.h"
 #include "../include/cuda/fadd.cuh"
-#include "../include/cuda/info.cuh"
 
 int main(int argc, char *argv[])
 {
@@ -24,12 +24,6 @@ int main(int argc, char *argv[])
     unsigned int N = strtoul(argv[1], NULL, 10);
     unsigned int M = strtoul(argv[2], NULL, 10);
     unsigned int P = strtoul(argv[3], NULL, 10);
-
-    /**
-     * @brief Ejecución del diagnóstico de las GPUs del sistema.
-     *
-     */
-    print_gpu_info();
 
     // Declaramos & init. las matrices en mem. din.
     A = (float *)malloc(N * M * sizeof(float));
