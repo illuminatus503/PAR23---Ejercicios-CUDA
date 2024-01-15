@@ -5,8 +5,9 @@
 #include <stdlib.h>
 
 #include "../include/utilities_CPU.h"
-#include "../include/errchk_GPU.cuh"
-#include "../include/matmul_sharedmem_GPU.cuh"
+
+#include "../include/cuda/errchk_GPU.cuh"
+#include "../include/cuda/matmul_sharedmem_GPU.cuh"
 
 __global__ void cuda_fma_sharedmem(float *A_, float *B_, float *C_, float *D,
                                    int N, int M, int P)

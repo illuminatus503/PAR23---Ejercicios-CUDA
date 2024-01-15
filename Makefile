@@ -20,10 +20,14 @@ CUDA_LINK_LIBS = -lcudart
 ## Project file structure ##
 # Source file directory:
 SRC_DIR = src
+CUDA_SRC_DIR = $(SRC_DIR)/cuda
 # Object file directory:
 OBJ_DIR = obj
+CUDA_OBJ_DIR = $(OBJ_DIR)/cuda
 # Include header file directory:
 INC_DIR = include
+# Additional include directories:
+CUDA_INC_DIR = $(INC_DIR)/cuda
 # Library directory:
 LIB_DIR = lib
 # Test directory:
@@ -36,9 +40,9 @@ BIN_DIR = bin
 BIN = $(BIN_DIR)/program
 # C and CUDA source files:
 SRC_C = $(wildcard $(SRC_DIR)/*.c)
-SRC_CU = $(wildcard $(SRC_DIR)/*.cu)
+SRC_CU = $(wildcard $(CUDA_SRC_DIR)/*.cu)
 # Object files:
-OBJS = $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o) $(SRC_CU:$(SRC_DIR)/%.cu=$(OBJ_DIR)/%.o)
+OBJS = $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o) $(SRC_CU:$(CUDA_SRC_DIR)/%.cu=$(CUDA_OBJ_DIR)/%.o)
 
 ## Compile ##
 # Link C and CUDA compiled object files to target executable:
@@ -50,11 +54,14 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
 	$(CC) $(CC_FLAGS) -c $< -o $@ $(CC_LIBS)
 
 # Compile CUDA source files to object files:
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.cu | $(OBJ_DIR)
+$(CUDA_OBJ_DIR)/%.o: $(CUDA_SRC_DIR)/%.cu | $(CUDA_OBJ_DIR)
 	$(NVCC) $(NVCC_FLAGS) -c $< -o $@ $(NVCC_LIBS)
 
 # Handle directories
 $(OBJ_DIR):
+	mkdir -p $@
+
+$(CUDA_OBJ_DIR):
 	mkdir -p $@
 
 $(BIN_DIR):
@@ -62,6 +69,6 @@ $(BIN_DIR):
 
 # Clean objects in object directory and executable in bin directory.
 clean:
-	$(RM) -rv $(BIN_DIR)/* $(OBJ_DIR)/*
+	$(RM) -rv $(BIN_DIR)/* $(OBJ_DIR)/* $(CUDA_OBJ_DIR)/*
 
 .PHONY: clean

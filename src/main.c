@@ -6,9 +6,9 @@
 #include "../include/matmul_CPU.h"
 
 // GPU imports
-#include "../include/info_GPU.cuh"
-#include "../include/matmul_naive_GPU.cuh"
-#include "../include/matmul_sharedmem_GPU.cuh"
+#include "../include/cuda/info_GPU.cuh"
+#include "../include/cuda/matmul_naive_GPU.cuh"
+#include "../include/cuda/matmul_sharedmem_GPU.cuh"
 
 int main(int argc, char *argv[])
 {
