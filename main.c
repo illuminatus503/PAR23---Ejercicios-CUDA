@@ -1,14 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// CPU imports
-#include "../include/utilities_CPU.h"
-#include "../include/matmul_CPU.h"
-
-// GPU imports
-#include "../include/cuda/info_GPU.cuh"
-#include "../include/cuda/matmul_naive_GPU.cuh"
-#include "../include/cuda/matmul_sharedmem_GPU.cuh"
+#include "../include/utils.h"
+#include "../include/fadd.h"
+#include "../include/cuda/fadd.cuh"
+#include "../include/cuda/info.cuh"
 
 int main(int argc, char *argv[])
 {

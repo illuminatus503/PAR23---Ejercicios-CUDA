@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "../include/cuda/info_GPU.cuh"
+#include "../include/cuda/info.cuh"
 
 void get_gpu_info(struct info_t *infoGPUs)
 {

@@ -44,6 +44,23 @@ SRC_CU = $(wildcard $(CUDA_SRC_DIR)/*.cu)
 # Object files:
 OBJS = $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o) $(SRC_CU:$(CUDA_SRC_DIR)/%.cu=$(CUDA_OBJ_DIR)/%.o)
 
+# Test source files:
+TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
+# Test binaries:
+TEST_BINS = $(TEST_SRC:$(TEST_DIR)/%.c=$(TEST_DIR)/%)
+
+# Test rule:
+test: $(TEST_BINS)
+	@for test_bin in $(TEST_BINS); do \
+		echo Running $$test_bin; \
+		./$$test_bin; \done
+
+# Rule to compile test binaries:
+$(TEST_DIR)/%: $(TEST_DIR)/%.c
+    $(CC) $(CFLAGS) -o $@ $<
+
+.PHONY: test
+
 ## Compile ##
 # Link C and CUDA compiled object files to target executable:
 $(BIN): $(OBJS) | $(BIN_DIR)

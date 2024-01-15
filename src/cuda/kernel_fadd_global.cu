@@ -1,4 +1,4 @@
-#include "../../include/cuda/naive_fadd.cuh"
+#include "../../include/cuda/kernel_fadd.cuh"
 
 __global__ void cuda_fma_global(float *A_, float *B_, float *C_, float *D,
                                 int N, int M, int P)

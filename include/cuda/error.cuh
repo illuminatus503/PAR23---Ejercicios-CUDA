@@ -1,5 +1,5 @@
-#ifndef __ERRCHK_GPU__
-#define __ERRCHK_GPU__
+#ifndef __ERRCHK_CUH__
+#define __ERRCHK_CUH__
 
 #include <stdbool.h>
 

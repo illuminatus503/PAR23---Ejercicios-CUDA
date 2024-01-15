@@ -2,9 +2,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "../include/utilities_CPU.h"
-
-#include "../include/matmul_CPU.h"
+#include "../include/utils.h"
+#include "../include/fadd.h"
 
 double __fma_CPU(float *A_, float *B_, float *C_, float *D, int N, int M, int P)
 {

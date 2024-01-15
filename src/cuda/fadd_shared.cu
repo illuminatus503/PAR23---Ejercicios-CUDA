@@ -4,15 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/utilities_CPU.h"
+#include "../../include/cuda/fadd.cuh"
+#include "../../include/cuda/kernel_fadd.cuh"
 
-#include "../include/cuda/errchk_GPU.cuh"
-#include "../include/cuda/matmul_naive_GPU.cuh"
-#include "../include/cuda/naive_fadd.cuh"
+#include "../../include/utils.h"
+#include "../../include/cuda/error.cuh"
 
-
-double __fma_naive_GPU(float *A_, float *B_, float *C_, float *D,
-                       int N, int M, int P)
+double __fma_sharedmem_gpu(float *A_, float *B_, float *C_, float *D,
+                           int N, int M, int P)
 {
     /**
      * Medición de tiempos
@@ -49,7 +48,7 @@ double __fma_naive_GPU(float *A_, float *B_, float *C_, float *D,
 
     // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_global<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
+    cuda_fma_sharedmem<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, N, M, P);
     cudaCheckError(); // Check error after execution
     gpuErrchk(cudaEventRecord(stop));
 
@@ -69,10 +68,10 @@ double __fma_naive_GPU(float *A_, float *B_, float *C_, float *D,
     return (double)exe_time_ms;
 }
 
-double fma_naive_GPU(float *A_, int N1, int M1,
-                     float *B_, int N2, int M2,
-                     float *C_, int N3, int M3,
-                     float *D, int N, int M)
+double fma_sharedmem_GPU(float *A_, int N1, int M1,
+                         float *B_, int N2, int M2,
+                         float *C_, int N3, int M3,
+                         float *D, int N, int M)
 {
     if (!matrix_checkdims(N1, M1, N2, M2, N3, M3, N, M))
     {
@@ -82,5 +81,5 @@ double fma_naive_GPU(float *A_, int N1, int M1,
         return 0.0; // Asum. que el checkeo no añade sobrecostes
     }
 
-    return __fma_naive_GPU(A_, B_, C_, D, N, M1, M);
+    return __fma_sharedmem_gpu(A_, B_, C_, D, N, M1, M);
 }

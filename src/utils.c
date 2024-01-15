@@ -3,7 +3,7 @@
 #include <time.h>
 #include <math.h>
 
-#include "../include/utilities_CPU.h"
+#include "../include/utils.h"
 
 double timing_CPU(struct timespec begin, struct timespec end)
 {
