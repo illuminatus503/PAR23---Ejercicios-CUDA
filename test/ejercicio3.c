@@ -3,8 +3,8 @@
 
 #include "../include/utils.h"
 
-#include "../include/fadd.h"
-#include "../include/cuda/fadd.cuh"
+#include "../include/fma.h"
+#include "../include/cuda/fma.cuh"
 
 /**
  * @brief Definimos las dimensiones de las matrices por defecto aquí.
@@ -27,18 +27,17 @@ int main()
     D_gpu = (float *)calloc(N * P, sizeof(float));
     gen_matrices(N, M, P, A, B, C);
 
+    // FMA en CPU
+    time_cpu = fma_cpu(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
+
+    // FMA en GPU (naïve)
+    time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+
     printf("-----------------------------------------------------------\n");
     printf("Operation         | Exec. time (ms) | ||·||_inf / CPU vs GPU\n");
     printf("-----------------------------------------------------------\n");
-
-    // FMA en CPU
-    time_cpu = fma_CPU(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
     printf("FMA (CPU)         | %15.3f | %20.3f\n", time_cpu, 0.0);
-
-    // FMA en GPU (naïve)
-    time_shared_gpu = fma_sharedmem_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
     printf("FMA (GPU, shared) | %15.3f | %20.3f\n", time_shared_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
-
     printf("-----------------------------------------------------------\n");
 
     // Liberamos la memoria dinámica reservada

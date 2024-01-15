@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../include/cuda/info.cuh"
+#include "../include/cuda/utils.cuh"
 
 int main()
 {
     /**
-     * @brief Ejecutamos una análisis sobre el sistema para 
+     * @brief Ejecutamos una análisis sobre el sistema para
      * determinar los siguientes aspectos:
      *  - 1. el número de GPUsq del sistema,
      *  Por cada GPU,
@@ -18,7 +18,14 @@ int main()
      *    - 7. tamaño máximo en hilo disponibles por dimensión,
      *    - 8. número máximo de bloues por cada dimensión del grid.
      */
-    print_gpu_info();
-    
+
+    struct info_t gpu_array;
+    load_gpu_info(&gpu_array);
+
+    // Print the device information
+    print_gpu_info(&gpu_array);
+
+    clean_gpu_info(&gpu_array);
+
     return 0;
 }

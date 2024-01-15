@@ -1,7 +1,7 @@
 #ifndef __FADD_CUH__
 #define __FADD_CUH__
 
-#define THR_PER_BLOCK 32 // Número de hilos por bloque
+#define THR_PER_BLOCK 32 // Número de hilos por bloque, por dimensión X, Y
 
 #define WMMA_M 16
 #define WMMA_N 16
@@ -24,10 +24,11 @@
  * @param M
  * @return double Tiempo de ejecución de la operación en ms.
  */
-double fma_naive_GPU(float *A_, int N1, int M1,
-                     float *B_, int N2, int M2,
-                     float *C_, int N3, int M3,
-                     float *D, int N, int M);
+double fma_global_gpu(float *A_, int N1, int M1,
+                      float *B_, int N2, int M2,
+                      float *C_, int N3, int M3,
+                      float *D, int N, int M,
+                      struct info_t *gpu_array);
 
 /**
  * @brief Operación FMADD: Fused-Multiply-Add en GPU.
@@ -47,10 +48,10 @@ double fma_naive_GPU(float *A_, int N1, int M1,
  * @param M
  * @return double Tiempo de ejecución de la operación en ms.
  */
-double fma_sharedmem_GPU(float *A_, int N1, int M1,
-                         float *B_, int N2, int M2,
-                         float *C_, int N3, int M3,
-                         float *D, int N, int M);
+double fma_shared_gpu(float *A_, int N1, int M1,
+                      float *B_, int N2, int M2,
+                      float *C_, int N3, int M3,
+                      float *D, int N, int M);
 
 /**
  * @brief Operación FMADD: Fused-Multiply-Add en GPU.
@@ -71,7 +72,7 @@ double fma_sharedmem_GPU(float *A_, int N1, int M1,
  * @param M
  * @return double Tiempo de ejecución de la operación en ms.
  */
-double fma_wmma_GPU(float *A_, int N1, int M1,
+double fma_wmma_gpu(float *A_, int N1, int M1,
                     float *B_, int N2, int M2,
                     float *C_, int N3, int M3,
                     float *D, int N, int M);

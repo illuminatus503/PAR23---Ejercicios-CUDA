@@ -5,7 +5,7 @@
 
 #include "../include/utils.h"
 
-double timing_CPU(struct timespec begin, struct timespec end)
+double timing_cpu(struct timespec begin, struct timespec end)
 {
     return ((end.tv_sec - begin.tv_sec) * 1e3 + ((end.tv_nsec - begin.tv_nsec) * 1e-6));
 }

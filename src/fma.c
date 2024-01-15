@@ -3,9 +3,9 @@
 #include <time.h>
 
 #include "../include/utils.h"
-#include "../include/fadd.h"
+#include "../include/fma.h"
 
-double __fma_CPU(float *A_, float *B_, float *C_, float *D, int N, int M, int P)
+double __fma_cpu(float *A_, float *B_, float *C_, float *D, int N, int M, int P)
 {
     int i, j, k;
     struct timespec begin, end;
@@ -24,10 +24,10 @@ double __fma_CPU(float *A_, float *B_, float *C_, float *D, int N, int M, int P)
     }
     clock_gettime(CLOCK_MONOTONIC, &end);
 
-    return timing_CPU(begin, end);
+    return timing_cpu(begin, end);
 }
 
-double fma_CPU(float *A_, int N1, int M1,
+double fma_cpu(float *A_, int N1, int M1,
                float *B_, int N2, int M2,
                float *C_, int N3, int M3,
                float *D, int N, int M)
@@ -40,5 +40,5 @@ double fma_CPU(float *A_, int N1, int M1,
         return 0.0; // Asum. que el checkeo no añade sobrecostes
     }
 
-    return __fma_CPU(A_, B_, C_, D, N, M1, M);
+    return __fma_cpu(A_, B_, C_, D, N, M1, M);
 }

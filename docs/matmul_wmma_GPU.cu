@@ -88,7 +88,7 @@ double __fma_wmma_GPU(float *A_, float *B_, float *C_, float *D,
     return (double)exe_time_ms;
 }
 
-double fma_wmma_GPU(float *A_, int N1, int M1,
+double fma_wmma_gpu(float *A_, int N1, int M1,
                          float *B_, int N2, int M2,
                          float *C_, int N3, int M3,
                          float *D, int N, int M)

@@ -3,12 +3,12 @@
 
 #include "../include/utils.h"
 
-#include "../include/fadd.h"
-#include "../include/cuda/fadd.cuh"
+#include "../include/fma.h"
+#include "../include/cuda/fma.cuh"
 
 int main(int argc, char *argv[])
 {
-    double time_naive_gpu, time_sharedmem_gpu, time_cpu;
+    double time_naive_gpu, time_shared_gpu, time_cpu;
     float *A, *B, *C, *D_cpu, *D_gpu;
 
     if (argc != 4)
@@ -40,19 +40,19 @@ int main(int argc, char *argv[])
     printf("Operation, Exec. time (ms), ||·||_inf / CPU vs GPU\n");
 
     // ! FMA en CPU
-    time_cpu = fma_CPU(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
+    time_cpu = fma_cpu(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
     printf("FMA (CPU), %3.3f, 0.0\n",
            time_cpu);
 
     // ! FMA en GPU (naïve)
-    time_naive_gpu = fma_naive_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+    time_naive_gpu = fma_global_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
     printf("FMA (GPU, naïve), %3.3f, %3.3f\n",
            time_naive_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
 
     // ! FMA en GPU (shared mem.)
-    time_sharedmem_gpu = fma_sharedmem_GPU(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+    time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
     printf("FMA (GPU, shared mem.), %3.3f, %3.3f\n",
-           time_sharedmem_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
+           time_shared_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
 
     // Liberamos la mem. din. reservada
     free(A);

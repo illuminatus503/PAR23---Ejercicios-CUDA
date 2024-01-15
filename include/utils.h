@@ -3,7 +3,7 @@
 
 /**
  * @brief Genera tres matrices compatibles para la multiplicación, u
- * operaciones FMADD (Fused-Multiply-Add).
+ * operaciones FMA (Fused-Multiply-Add).
  *
  * @param N Dimensión N
  * @param M Dimensión M
@@ -16,7 +16,7 @@ void gen_matrices(int N, int M, int P, float *A, float *B, float *C);
 
 /**
  * @brief Checkea si las dimensiones de las matrices son compatibles
- * con las operaciones FMADD.
+ * con las operaciones FMA.
  *
  * @param N1
  * @param M1
@@ -26,7 +26,7 @@ void gen_matrices(int N, int M, int P, float *A, float *B, float *C);
  * @param M3
  * @param N
  * @param M
- * @return true Si las dimensiones son compatibles con FMADD
+ * @return true Si las dimensiones son compatibles con FMA
  * @return false En cualquier otro caso
  */
 bool matrix_checkdims(int N1, int M1,
@@ -68,6 +68,6 @@ void matrix_print(float *A_, int N, int M);
  * @param end End measurement
  * @return double Elapsed time between measurements, in ms.
  */
-double timing_CPU(struct timespec begin, struct timespec end);
+double timing_cpu(struct timespec begin, struct timespec end);
 
 #endif

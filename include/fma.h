@@ -18,7 +18,7 @@
  * @param M
  * @return double Tiempo de ejecución de la operación en ms.
  */
-double fma_CPU(float *A_, int N1, int M1,
+double fma_cpu(float *A_, int N1, int M1,
                float *B_, int N2, int M2,
                float *C_, int N3, int M3,
                float *D, int N, int M);

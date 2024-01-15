@@ -4,14 +4,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "../../include/cuda/fadd.cuh"
-#include "../../include/cuda/kernel_fadd.cuh"
+#include "../../include/cuda/fma.cuh"
+#include "../../include/cuda/kernel_fma.cuh"
 
 #include "../../include/utils.h"
 #include "../../include/cuda/error.cuh"
 
-double __fma_sharedmem_gpu(float *A_, float *B_, float *C_, float *D,
-                           int N, int M, int P)
+double __fma_shared_gpu(float *A_, float *B_, float *C_, float *D,
+                        int N, int M, int P)
 {
     /**
      * Medición de tiempos
@@ -68,10 +68,10 @@ double __fma_sharedmem_gpu(float *A_, float *B_, float *C_, float *D,
     return (double)exe_time_ms;
 }
 
-double fma_sharedmem_GPU(float *A_, int N1, int M1,
-                         float *B_, int N2, int M2,
-                         float *C_, int N3, int M3,
-                         float *D, int N, int M)
+double fma_shared_gpu(float *A_, int N1, int M1,
+                      float *B_, int N2, int M2,
+                      float *C_, int N3, int M3,
+                      float *D, int N, int M)
 {
     if (!matrix_checkdims(N1, M1, N2, M2, N3, M3, N, M))
     {
@@ -81,5 +81,5 @@ double fma_sharedmem_GPU(float *A_, int N1, int M1,
         return 0.0; // Asum. que el checkeo no añade sobrecostes
     }
 
-    return __fma_sharedmem_gpu(A_, B_, C_, D, N, M1, M);
+    return __fma_shared_gpu(A_, B_, C_, D, N, M1, M);
 }
