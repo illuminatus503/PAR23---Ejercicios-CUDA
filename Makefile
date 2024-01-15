@@ -32,6 +32,7 @@ CUDA_INC_DIR = $(INC_DIR)/cuda
 LIB_DIR = lib
 # Test directory:
 TEST_DIR = test
+TEST_BIN_DIR = $(TEST_DIR)/bin
 # Bin directory (for the final executable):
 BIN_DIR = bin
 
@@ -42,29 +43,40 @@ BIN = $(BIN_DIR)/program
 SRC_C = $(wildcard $(SRC_DIR)/*.c)
 SRC_CU = $(wildcard $(CUDA_SRC_DIR)/*.cu)
 # Object files:
-OBJS = $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o) $(SRC_CU:$(CUDA_SRC_DIR)/%.cu=$(CUDA_OBJ_DIR)/%.o)
+OBJS = $(filter-out $(OBJ_DIR)/main.o, $(SRC_C:$(SRC_DIR)/%.c=$(OBJ_DIR)/%.o) $(SRC_CU:$(CUDA_SRC_DIR)/%.cu=$(CUDA_OBJ_DIR)/%.o))
 
+## Test compilation and execution ##
 # Test source files:
 TEST_SRC = $(wildcard $(TEST_DIR)/*.c)
+# Test object files:
+TEST_OBJS = $(TEST_SRC:$(TEST_DIR)/%.c=$(TEST_DIR)/%.o)
 # Test binaries:
-TEST_BINS = $(TEST_SRC:$(TEST_DIR)/%.c=$(TEST_DIR)/%)
+TEST_BINS = $(TEST_SRC:$(TEST_DIR)/%.c=$(TEST_BIN_DIR)/%)
+
+## Compile ##
+# Compile all project files
+all: $(BIN)
 
 # Test rule:
 test: $(TEST_BINS)
+	@echo "";
 	@for test_bin in $(TEST_BINS); do \
 		echo Running $$test_bin; \
-		./$$test_bin; \done
+		$$test_bin; \
+		echo ""; \
+	done
 
 # Rule to compile test binaries:
-$(TEST_DIR)/%: $(TEST_DIR)/%.c
-    $(CC) $(CFLAGS) -o $@ $<
+$(TEST_BIN_DIR)/%: $(TEST_DIR)/%.o $(OBJS) | $(TEST_BIN_DIR) 
+	$(CC) $(CC_FLAGS) $^ -o $@ $(CUDA_LIB_DIR) $(CUDA_LINK_LIBS) $(CC_LIBS)
 
-.PHONY: test
-
-## Compile ##
 # Link C and CUDA compiled object files to target executable:
 $(BIN): $(OBJS) | $(BIN_DIR)
-	$(CC) $(CC_FLAGS) $(OBJS) -o $@ $(CUDA_LIB_DIR) $(CUDA_LINK_LIBS) $(CC_LIBS)
+	$(CC) $(CC_FLAGS) $(OBJS) $(SRC_DIR)/main.c -o $@ $(CUDA_LIB_DIR) $(CUDA_LINK_LIBS) $(CC_LIBS)
+
+# Compile test source files to object files:
+$(TEST_DIR)/%.o: $(TEST_DIR)/%.c | $(TEST_BIN_DIR) 
+	$(CC) $(CC_FLAGS) -c $< -o $@
 
 # Compile C source files to object files:
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
@@ -76,16 +88,20 @@ $(CUDA_OBJ_DIR)/%.o: $(CUDA_SRC_DIR)/%.cu | $(CUDA_OBJ_DIR)
 
 # Handle directories
 $(OBJ_DIR):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(CUDA_OBJ_DIR):
-	mkdir -p $@
+	@mkdir -p $@
 
 $(BIN_DIR):
-	mkdir -p $@
+	@mkdir -p $@
+
+$(TEST_BIN_DIR):
+	@mkdir -p $@
 
 # Clean objects in object directory and executable in bin directory.
 clean:
-	$(RM) -rv $(BIN_DIR)/* $(OBJ_DIR)/* $(CUDA_OBJ_DIR)/*
+	$(RM) -rv $(BIN_DIR)/* $(OBJ_DIR)/* $(CUDA_OBJ_DIR)/* $(TEST_BIN_DIR)/*
 
-.PHONY: clean
+
+.PHONY: all test clean $(BIN_DIR) $(OBJ_DIR) $(CUDA_OBJ_DIR) $(TEST_DIR)
