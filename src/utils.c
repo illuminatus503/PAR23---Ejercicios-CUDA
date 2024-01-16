@@ -99,3 +99,17 @@ float matrix_infty_dist(float *A_, float *B_, int N, int M)
 
     return infty_norm;
 }
+
+float mse(float *A_, float *B_, int rows, int cols)
+{
+    float error = 0.0;
+    int size = rows * cols;
+
+    for (int i = 0; i < size; i++)
+    {
+        float diff = A_[i] - B_[i];
+        error += diff * diff;
+    }
+
+    return error / size;
+}

@@ -70,4 +70,16 @@ void matrix_print(float *A_, int N, int M);
  */
 double timing_cpu(struct timespec begin, struct timespec end);
 
+/**
+ * @brief Mean Squeared Error (MSE). Calculamos el error cuadrático
+ * promedio de la diferencia de las matrices.
+ *
+ * @param A_ matriz de float
+ * @param B_ matriz de float
+ * @param rows filas
+ * @param cols columnas
+ * @return float El MSE entre ambas
+ */
+float mse(float *A_, float *B_, int rows, int cols);
+
 #endif
