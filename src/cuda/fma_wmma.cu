@@ -15,7 +15,7 @@
 #define WARP_SIZE 32
 
 double __fma_wmma_gpu(float *A_, float *B_, float *C_, float *D,
-                      int N, int M, int P,
+                      int M, int N, int K,
                       struct info_t *gpu_array)
 {
     size_t gpu_id;
@@ -23,12 +23,30 @@ double __fma_wmma_gpu(float *A_, float *B_, float *C_, float *D,
     cudaEvent_t start, stop;
     float exe_time_ms = 0.0;
 
+    // Calculamos el tamaño de las matrices padded
+    int M_padded = (M + WMMA_M - 1) / WMMA_M * WMMA_M;
+    int N_padded = (N + WMMA_N - 1) / WMMA_N * WMMA_N;
+    int K_padded = (K + WMMA_K - 1) / WMMA_K * WMMA_K;
+
+    // Generamos nuevas matrices padded, que se pasarán al kernel
+    // Para A (M_padded x K_padded)
+    half *A_padded = (half *)malloc(M_padded * K_padded * sizeof(half));
+    memset(A_padded, 0, M_padded * K_padded * sizeof(half));
+
+    // Para B (K_padded x N_padded)
+    half *B_padded = (half *)malloc(K_padded * N_padded * sizeof(half));
+    memset(B_padded, 0, K_padded * N_padded * sizeof(half));
+
+    // Para C (M_padded x N_padded)
+    float *C_padded = (float *)malloc(M_padded * N_padded * sizeof(float));
+    memset(C_padded, 0, M_padded * N_padded * sizeof(float));
+
     // Calculamos el espacio necesario en bytes para las matrices
     half *d_A, *d_B, *h_A_half, *h_B_half;
     float *d_C, *d_D;
     const size_t size_A = N * M * sizeof(half);   // Matriz A (half)
-    const size_t size_B = M * P * sizeof(half);   // Matriz B (half)
-    const size_t size_CD = N * P * sizeof(float); // Matrices C y D (float)
+    const size_t size_B = M * K * sizeof(half);   // Matriz B (half)
+    const size_t size_CD = N * K * sizeof(float); // Matrices C y D (float)
 
     // TODO múltiples dispositivos: por defecto, 0
     gpu_id = 0;
@@ -70,7 +88,7 @@ double __fma_wmma_gpu(float *A_, float *B_, float *C_, float *D,
     {
         h_A_half[i] = __float2half(A_[i]);
     }
-    for (int i = 0; i < M * P; ++i)
+    for (int i = 0; i < M * K; ++i)
     {
         h_B_half[i] = __float2half(B_[i]);
     }
@@ -91,7 +109,7 @@ double __fma_wmma_gpu(float *A_, float *B_, float *C_, float *D,
     printf("[+] Lanzando el kernel en un grid de %u x %u x %u bloques\n",
            gridDim.x, gridDim.y, gridDim.z);
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_wmma<<<gridDim, blockDim>>>(d_A, d_B, d_C, d_D, N, M, P);
+    cuda_fma_wmma<<<gridDim, blockDim>>>(d_A, d_B, d_C, d_D, N, M, K);
     cudaCheckError(); // Check error after execution
     gpuErrchk(cudaEventRecord(stop));
     printf("[+] Recuperando datos del dispositivo...\n");

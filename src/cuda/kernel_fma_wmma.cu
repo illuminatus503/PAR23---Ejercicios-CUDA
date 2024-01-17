@@ -15,7 +15,9 @@ using namespace nvcuda; // compilar con
 
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D, int M, int N, int K)
+__global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D,
+                              int M_total, int N_total, int K_total,
+                              int M_padded, int N_padded, int K_padded)
 {
     int a_col, a_row, b_col, b_row, c_col, c_row;
     int ix = (blockIdx.x * blockDim.x + threadIdx.x) / warpSize;
@@ -33,16 +35,16 @@ __global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D, int M, int N
     // Perform AB = A*B
     a_row = ix * WMMA_M;
     b_row = iy * WMMA_N;
-    for (int k = 0; k < K; k += WMMA_K)
+    for (int k = 0; k < K_padded; k += WMMA_K)
     {
         a_col = k;
         b_col = k;
 
-        if (a_row < M && a_col < K && b_row < K && b_col < N)
+        if (a_row < M_total && a_col < K_total && b_row < K_total && b_col < N_total)
         {
             // Load the inputs
-            wmma::load_matrix_sync(a_frag, A + a_col + a_row * K, K);
-            wmma::load_matrix_sync(b_frag, B + b_col + b_row * K, K);
+            wmma::load_matrix_sync(a_frag, A + a_col + a_row * K_padded, K_padded);
+            wmma::load_matrix_sync(b_frag, B + b_col + b_row * K_padded, K_padded);
 
             // Perform the matrix multiplication
             wmma::mma_sync(ab_frag, a_frag, b_frag, ab_frag);
@@ -52,9 +54,9 @@ __global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D, int M, int N
     // Perform D = AB + C
     c_col = b_row;
     c_row = a_row;
-    if (c_row < M && c_col < N)
+    if (c_row < M_total && c_col < N_total)
     {
-        wmma::load_matrix_sync(c_frag, C + c_col + c_row * N, N, wmma::mem_row_major);
+        wmma::load_matrix_sync(c_frag, C + c_col + c_row * N_padded, N_padded, wmma::mem_row_major);
 
         for (int i = 0; i < c_frag.num_elements; i++)
         {
@@ -62,6 +64,6 @@ __global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D, int M, int N
         }
 
         // Store the output
-        wmma::store_matrix_sync(D + c_col + c_row * N, c_frag, N, wmma::mem_row_major);
+        wmma::store_matrix_sync(D + c_col + c_row * N_padded, c_frag, N_padded, wmma::mem_row_major);
     }
 }
