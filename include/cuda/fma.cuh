@@ -22,6 +22,8 @@
  * @param D Matriz D(N x M) de float
  * @param N
  * @param M
+ * @param gpu_array un array de propiedades del sistema de aceleradores
+ * actual
  * @return double Tiempo de ejecución de la operación en ms.
  */
 double fma_global_gpu(float *A_, int N1, int M1,
@@ -46,12 +48,15 @@ double fma_global_gpu(float *A_, int N1, int M1,
  * @param D Matriz D(N x M) de float
  * @param N
  * @param M
+ * @param gpu_array un array de propiedades del sistema de aceleradores
+ * actual
  * @return double Tiempo de ejecución de la operación en ms.
  */
 double fma_shared_gpu(float *A_, int N1, int M1,
                       float *B_, int N2, int M2,
                       float *C_, int N3, int M3,
-                      float *D, int N, int M);
+                      float *D, int N, int M,
+                      struct info_t *gpu_array);
 
 /**
  * @brief Operación FMADD: Fused-Multiply-Add en GPU.
@@ -70,11 +75,14 @@ double fma_shared_gpu(float *A_, int N1, int M1,
  * @param D Matriz D(N x M) de float
  * @param N
  * @param M
+ * @param gpu_array un array de propiedades del sistema de aceleradores
+ * actual
  * @return double Tiempo de ejecución de la operación en ms.
  */
 double fma_wmma_gpu(float *A_, int N1, int M1,
                     float *B_, int N2, int M2,
                     float *C_, int N3, int M3,
-                    float *D, int N, int M);
+                    float *D, int N, int M,
+                    struct info_t *gpu_array);
 
 #endif

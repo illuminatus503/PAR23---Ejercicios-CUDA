@@ -1,0 +1,20 @@
+==== GPU Analysis ====
+Total Number of GPUs: 2
+----------------------------------------
+GPU ID: 0
+Free Memory: 7887 MB / Total Memory: 7982 MB
+Streaming Multiprocessors (SM): 36
+Shared Memory per Block: 48 KB
+Max Threads per Block: 1024
+Max Threads Dimensions: x = 1024, y = 1024, z = 64
+Max Grid Size: x = 2147483647, y = 65535, z = 65535
+----------------------------------------
+GPU ID: 1
+Free Memory: 7887 MB / Total Memory: 7982 MB
+Streaming Multiprocessors (SM): 36
+Shared Memory per Block: 48 KB
+Max Threads per Block: 1024
+Max Threads Dimensions: x = 1024, y = 1024, z = 64
+Max Grid Size: x = 2147483647, y = 65535, z = 65535
+----------------------------------------
+==== End of GPU Analysis ====
