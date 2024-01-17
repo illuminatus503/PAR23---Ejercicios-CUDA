@@ -1,12 +1,6 @@
 #ifndef __FADD_CUH__
 #define __FADD_CUH__
 
-#define THR_PER_BLOCK 32 // Número de hilos por bloque, por dimensión X, Y
-
-#define WMMA_M 16
-#define WMMA_N 16
-#define WMMA_K 16
-
 /**
  * @brief Operación FMADD: Fused-Multiply-Add en GPU
  *

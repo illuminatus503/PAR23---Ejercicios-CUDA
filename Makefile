@@ -7,8 +7,7 @@ CC_FLAGS = -Wall -g -O2 -I$(INC_DIR)
 CC_LIBS = -lm
 # NVCC compiler options:
 NVCC = nvcc
-# NVCC_FLAGS = -O2 -arch=sm_50 -gencode=arch=compute_50,code=sm_50 -Wno-deprecated-gpu-targets -I$(INC_DIR)
-NVCC_FLAGS = -O2 -I$(INC_DIR)
+NVCC_FLAGS = -O2 -I$(INC_DIR) -arch sm_75
 NVCC_LIBS = -lm
 # CUDA library directory:
 CUDA_LIB_DIR = -L$(CUDA_ROOT_DIR)/lib64
