@@ -6,10 +6,7 @@
 
 #include "../../include/cuda/fma.cuh"
 #include "../../include/cuda/kernel_fma.cuh"
-
-#include "../../include/utils.h"
 #include "../../include/cuda/error.cuh"
-#include "../../include/cuda/utils.cuh"
 
 double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
                       const int M, const int N, const int K)
@@ -32,7 +29,7 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C, M * N * sizeof(float), cudaMemcpyHostToDevice));
 
     // Asegúrate de que el número de hilos por bloque no sea mayor que el máximo permitido
-    dim3 threadsPerBlock(THR_PER_BLOCK, THR_PER_BLOCK);
+    dim3 threadsPerBlock(WARP_SIZE, WARP_SIZE); // 1024 threads per block
     dim3 blocksPerGrid((N + threadsPerBlock.x - 1) / threadsPerBlock.x,
                        (M + threadsPerBlock.y - 1) / threadsPerBlock.y);
 

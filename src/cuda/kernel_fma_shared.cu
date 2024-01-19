@@ -1,6 +1,6 @@
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
+__global__ void cuda_fma_shared(float *A, float *B, float *C, float *D,
                                    int N, int M, int P)
 {
     int i, j, k, K;
@@ -21,7 +21,7 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
         tile_j = tile_ * TILE_SIZE + threadIdx.x;
         if (i < N && tile_j < M)
         {
-            A_shared[threadIdx.y][threadIdx.x] = A_[i * M + tile_j];
+            A_shared[threadIdx.y][threadIdx.x] = A[i * M + tile_j];
         }
         else
         {
@@ -32,7 +32,7 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
         tile_i = tile_ * TILE_SIZE + threadIdx.y;
         if (tile_i < M && j < P)
         {
-            B_shared[threadIdx.y][threadIdx.x] = B_[tile_i * P + j];
+            B_shared[threadIdx.y][threadIdx.x] = B[tile_i * P + j];
         }
         else
         {
@@ -54,6 +54,6 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
     // Escritura en mem. global de device (una sola vez)
     if (i < N && j < P)
     {
-        D[i * P + j] = sum + C_[i * P + j];
+        D[i * P + j] = sum + C[i * P + j];
     }
 }

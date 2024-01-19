@@ -35,30 +35,13 @@ int main()
     printf("CPU took %fms\n", exe_time_ms);
 
     // Ejecutamos la prueba de FMA en GPU (mem. global)
-    exe_time_ms = fma_gpu_global(D_GPU, A, B, C, M, N, K);
-    printf("GPU (global) took %fms\n", exe_time_ms);
+    exe_time_ms = fma_gpu_shared(D_GPU, A, B, C, M, N, K);
+    printf("GPU (shared) took %fms\n", exe_time_ms);
 
     printf("MSE: %f\n", mse(D, D_GPU, M, N));
     print_mat(D, M, N);
     printf("\n");
     print_mat(D_GPU, M, N);
-
-    // Calculamos los errores entre ambas matrices
-    // errores = allequal(D, D_GPU, M, N, TOL);
-
-    // if (errores)
-    // {
-    //     fprintf(stderr,
-    //             "[AVISO] Existen %d diferencias entre el cómputo en CPU y en GPU (global) (tol. %f)\n",
-    //             errores, TOL);
-
-    //     if (M * N < 200)
-    //     {
-    //         print_mat(D, M, N);
-    //         printf("\n");
-    //         print_mat(D_GPU, M, N);
-    //     }
-    // }
 
     return 0;
 }
