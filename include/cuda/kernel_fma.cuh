@@ -20,6 +20,8 @@ __global__ void cuda_fma_shared(float *C, const float *A, const float *B,
                                 const int M, const int N, const int K,
                                 const float alpha, const float beta);
 
-__global__ void cuda_fma_wmma(half *a, half *b, float *c, int M, int N, int K, float alpha, float beta);
+__global__ void cuda_fma_wmma(float *C, const half *A, const half *B,
+                              const int M, const int N, const int K,
+                              const float alpha, const float beta);
 
 #endif
