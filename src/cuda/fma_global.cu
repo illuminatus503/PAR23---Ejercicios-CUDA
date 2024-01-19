@@ -21,8 +21,8 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaEventCreate(&stop));
 
     // ! CUDA set device and check memory availability
-    cudaSetDevice(0);
-    cudaMemGetInfo(&free_mem, &total_mem);
+    gpuErrchk(cudaSetDevice(0));
+    gpuErrchk(cudaMemGetInfo(&free_mem, &total_mem));
     if (free_mem < ((M * K + K * N + M * N) * sizeof(float)))
     {
         fprintf(stderr, "[ERROR] Not enough memory available!\n");
@@ -32,7 +32,7 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
     // ! CUDA global memory allocation
     // Declaramos las var. de memoria global
     float *d_C;
-    const float *d_A, *d_B;
+    float *d_A, *d_B; // const
 
     // Reservamos mem. global
     gpuErrchk(cudaMalloc((void **)&d_A, M * K * sizeof(float)));
@@ -55,7 +55,7 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
 
     // ! CUDA launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_gemm_global<<<blockDim, gridDim>>>(d_C, d_A, d_B, M, N, K, 1.0, 1.0);
+    cuda_gemm_global<<<blockDim, gridDim>>>(d_C, (const float *)d_A, (const float *)d_B, M, N, K, 1.0, 1.0);
     cudaCheckError();
 
     // ! CUDA copy data to local mem.
