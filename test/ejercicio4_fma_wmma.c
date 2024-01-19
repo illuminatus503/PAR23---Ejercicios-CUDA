@@ -35,7 +35,7 @@ int main()
     printf("CPU took %fms\n", exe_time_ms);
 
     // Ejecutamos la prueba de FMA en GPU (mem. global)
-    exe_time_ms = fma_wmma_gpu(A, B, C, D_GPU, M, N, K);
+    exe_time_ms = fma_wmma_gpu(D_GPU, A, B, C, M, N, K);
     printf("GPU (wmma) took %fms\n", exe_time_ms);
 
     printf("MSE: %f\n", mse(D, D_GPU, M, N));
