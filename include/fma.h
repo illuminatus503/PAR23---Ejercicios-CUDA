@@ -2,25 +2,18 @@
 #define __MATMUL_CPU__
 
 /**
- * @brief Operación FMADD: Fused-Multiply-Add
+ * @brief Fused-multiply add operation. En CPU.
  *
- * @param A_ Matriz A(N x M1) de float de entrada
- * @param N1
- * @param M1
- * @param B_ Matriz B(M1 x M) de float de entrada
- * @param N2
- * @param M2
- * @param C_ Matriz C(N x M) de float de entrada
- * @param N3
- * @param M3
- * @param D Matriz D(N x M) de float
- * @param N
+ * @param D D = A * B + C, float M x N
+ * @param A float M x N
+ * @param B float N x K
+ * @param C float M x N
  * @param M
- * @return double Tiempo de ejecución de la operación en ms.
+ * @param N
+ * @param K
+ * @return double tiempo de ejecución en milisegundos
  */
-double fma_cpu(float *A_, int N1, int M1,
-               float *B_, int N2, int M2,
-               float *C_, int N3, int M3,
-               float *D, int N, int M);
+double fma_cpu(float *D, const float *A, const float *B, const float *C,
+               const int M, const int N, const int K);
 
 #endif

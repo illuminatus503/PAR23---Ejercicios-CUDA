@@ -2,17 +2,16 @@
 #define __CODECPU_H__
 
 /**
- * @brief Genera tres matrices compatibles para la multiplicación, u
- * operaciones FMA (Fused-Multiply-Add).
- *
- * @param N Dimensión N
- * @param M Dimensión M
- * @param P Dimensión P
- * @param A Matriz A(N x M) de float
- * @param B Matriz B(M x P) de float
- * @param C Matriz C(N x P) de float
+ * @brief Genera matrices aleatorias para FMA.
+ * 
+ * @param A float, M x K
+ * @param B float, K x N
+ * @param C float, M x N
+ * @param M 
+ * @param N 
+ * @param K 
  */
-void gen_matrices(int N, int M, int P, float *A, float *B, float *C);
+void gen_matrices(float *A, float *B, float *C, const int M, const int N, const int K);
 
 /**
  * @brief Checkea si las dimensiones de las matrices son compatibles

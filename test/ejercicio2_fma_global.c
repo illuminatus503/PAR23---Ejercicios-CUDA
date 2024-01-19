@@ -28,10 +28,10 @@ int main()
     }
 
     // Generamos las matrices
-    gen_matrices(M, N, K, A, B, C);
+    gen_matrices(A, B, C, M, N, K);
 
     // Ejecutamos la prueba de FMA
-    exe_time_ms = fma_cpu(A, M, K, B, K, N, C, M, N, D, M, N);
+    exe_time_ms = fma_cpu(D, A, B, C, M, N, K);
     printf("CPU took %fms\n", exe_time_ms);
 
     // Ejecutamos la prueba de FMA en GPU (mem. global)

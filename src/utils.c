@@ -10,36 +10,25 @@ double timing_cpu(struct timespec begin, struct timespec end)
     return ((end.tv_sec - begin.tv_sec) * 1e3 + ((end.tv_nsec - begin.tv_nsec) * 1e-6));
 }
 
-void gen_matrices(int N, int M, int P, float *A, float *B, float *C)
+void __rand_init(float *A, const int M, const int N)
 {
     int i, j;
 
-    // Inicializamos la matriz A
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            A[i * M + j] = rand() / ((float)RAND_MAX);
-        }
-    }
-
-    // Inicializamos la matriz B
     for (i = 0; i < M; i++)
     {
-        for (j = 0; j < P; j++)
+        for (j = 0; j < N; j++)
         {
-            B[i * P + j] = rand() / ((float)RAND_MAX);
+            A[i * N + j] = rand() / ((float)RAND_MAX);
         }
     }
+}
 
-    // Inicializamos la matriz C
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < P; j++)
-        {
-            C[i * P + j] = rand() / ((float)RAND_MAX);
-        }
-    }
+void gen_matrices(float *A, float *B, float *C,
+                  const int M, const int N, const int K)
+{
+    __rand_init(A, M, K);
+    __rand_init(B, K, N);
+    __rand_init(C, M, N);
 }
 
 bool matrix_checkdims(int N1, int M1, int N2, int M2, int N3, int M3, int N, int M)
