@@ -15,9 +15,9 @@ __global__ void cuda_fma_global(float *A_, float *B_, float *C_, float *D,
 __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
                                 int N, int M, int P);
 
-#define WMMA_M 16
-#define WMMA_N 16
-#define WMMA_K 16
+const int WMMA_M = 16;
+const int WMMA_N = 16;
+const int WMMA_K = 16;
 
 __global__ void cuda_fma_wmma(half *A_, half *B_, float *C_, float *D,
                               int M_total, int N_total, int K_total,

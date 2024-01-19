@@ -59,7 +59,7 @@ float matrix_infty_dist(float *A_, float *B_, int N, int M);
  * @param N
  * @param M
  */
-void matrix_print(float *A_, int N, int M);
+void print_mat(float *A_, int N, int M);
 
 /**
  * @brief Timing in CPU.

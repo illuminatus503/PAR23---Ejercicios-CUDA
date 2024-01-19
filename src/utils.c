@@ -62,7 +62,7 @@ bool matrix_checkdims(int N1, int M1, int N2, int M2, int N3, int M3, int N, int
     return 1;
 }
 
-void matrix_print(float *A_, int N, int M)
+void print_mat(float *A_, int N, int M)
 {
     int i, j;
 
