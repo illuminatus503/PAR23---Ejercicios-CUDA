@@ -1,35 +1,28 @@
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_global(float *A_, float *B_, float *C_, float *D,
-                                int N, int M, int P)
+__global__ void cuda_fma_global(float *D, const float *A_, const float *B_, const float *C_,
+                                const int M, const int N, const int K)
 {
     int i, j, k;
     float sum;
 
-    /**
-     * Calculamos el índice de i (filas, dim. y)
-     */
     i = blockIdx.y * blockDim.y + threadIdx.y;
-    if (i >= N)
+    if (i >= M)
         return;
 
-    /**
-     * Calculamos el índice de j (columnas, dim. x)
-     */
     j = blockIdx.x * blockDim.x + threadIdx.x;
-    if (j >= P)
+    if (j >= N)
         return;
 
     /**
      * Calcula el producto escalar de la fila i de A, columna j de B y
-     * le suma el valor Cij: el resultado se guarda en Dij.
-     *                      Dij = Cij + Ai_ · B_j
+     * le suma el valor Cij: Dij = Cij + Ai_ · B_j
      */
-    sum = C_[i * P + j];
-    for (k = 0; k < M; k++)
+    sum = C_[i * N + j];
+    for (k = 0; k < K; k++)
     {
-        sum += A_[i * M + k] * B_[k * P + j];
+        sum += A_[i * K + k] * B_[k * N + j];
     }
 
-    D[i * P + j] = sum; // solo escribimos una vez en mem. global de device
+    D[i * N + j] = sum;
 }

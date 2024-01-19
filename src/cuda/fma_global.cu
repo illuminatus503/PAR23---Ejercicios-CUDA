@@ -16,27 +16,21 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
 {
     cudaEvent_t start, stop;
     float exe_time_ms = 0.0;
-
-    // Calculamos el espacio necesario en bytes para las matrices
     float *d_A, *d_B, *d_C, *d_D;
-    const size_t size_A = M * K * sizeof(float);  // Matriz A
-    const size_t size_B = K * N * sizeof(float);  // Matriz B
-    const size_t size_CD = M * N * sizeof(float); // Matrices C y D
 
-    // Incializamos la medición de tiempo mediante eventos
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
 
     // Reservamos memoria para las matrices en el dispositivo
-    gpuErrchk(cudaMalloc((void **)&d_A, size_A));
-    gpuErrchk(cudaMalloc((void **)&d_B, size_B));
-    gpuErrchk(cudaMalloc((void **)&d_C, size_CD));
-    gpuErrchk(cudaMalloc((void **)&d_D, size_CD));
+    gpuErrchk(cudaMalloc((void **)&d_A, M * K * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_B, K * N * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_C, M * N * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_D, M * N * sizeof(float)));
 
     // Copiamos los datos necesarios para la operación: matrices A, B y C
-    gpuErrchk(cudaMemcpy((void *)d_A, (const void *)A, size_A, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy((void *)d_B, (const void *)B, size_B, cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C, size_CD, cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_A, (const void *)A, M * K * sizeof(float), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_B, (const void *)B, K * N * sizeof(float), cudaMemcpyHostToDevice));
+    gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C, M * N * sizeof(float), cudaMemcpyHostToDevice));
 
     // Asegúrate de que el número de hilos por bloque no sea mayor que el máximo permitido
     dim3 threadsPerBlock(THR_PER_BLOCK, THR_PER_BLOCK);
@@ -48,22 +42,17 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
                        (M + threadsPerBlock.y - 1) / threadsPerBlock.y);
 
     // Launch kernel
-    printf("[+] Lanzando el kernel en un grid de %u x %u x %u bloques\n",
-           blocksPerGrid.x, blocksPerGrid.y, blocksPerGrid.z);
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_global<<<blocksPerGrid, threadsPerBlock>>>(d_A, d_B, d_C, d_D, M, K, N);
-    cudaCheckError(); // Check error after execution
+    cuda_fma_global<<<blocksPerGrid, threadsPerBlock>>>(d_D, d_A, d_B, d_C, M, N, K);
+    cudaCheckError();
     gpuErrchk(cudaEventRecord(stop));
-    printf("[+] Recuperando datos del dispositivo...\n");
 
     // Copy data from device array to host array
-    gpuErrchk(cudaMemcpy((void *)D, (const void *)d_D, size_CD, cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy((void *)D, (const void *)d_D, M * N * sizeof(float), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
 
-    /**
-     * Free CUDA mem.
-     */
+    // Free CUDA resources
     gpuErrchk(cudaFree(d_A));
     gpuErrchk(cudaFree(d_B));
     gpuErrchk(cudaFree(d_C));
