@@ -60,7 +60,7 @@ all: $(BIN)
 test: $(TEST_BINS)
 	@echo "";
 	@for test_bin in $(TEST_BINS); do \
-		echo Running $$test_bin; \
+		echo "Launching $$test_bin"; \
 		$$test_bin; \
 		echo ""; \
 	done

@@ -96,10 +96,13 @@ double fma_gpu_wmma(float *D, const float *A, const float *B, const float *C,
     // Recuperamos los datos a la matriz resultado
     wmma_unpad(C_padded, M_padded, N_padded, D, M, N);
 
-    // Liberamos los recursos locales
-    free(A_padded);
-    free(B_padded);
-    free(C_padded);
+    // Liberamos los recursos locales, si fueron necesarios
+    if (A_padded != A)
+    {
+        free(A_padded);
+        free(B_padded);
+        free(C_padded);
+    }
 
     return (double)exe_time_ms;
 }

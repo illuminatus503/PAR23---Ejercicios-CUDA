@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # Job name
-#SBATCH --job-name=test
+#SBATCH --job-name=${JobName}
 
 # Define the files which will contain the Standard and Error output
-#SBATCH --output=outputs/M_%A.out
-#SBATCH --error=outputs/M_%A.err
+#SBATCH --output=M_%A.out
+#SBATCH --error=M_%A.err
 
 # Number of tasks that compose the job
 #SBATCH --ntasks=1
@@ -20,7 +20,7 @@
 
 # Select one partition
 #SBATCH --partition=EHP-PAR
-#SBATCH --gpus-per-task=2
+#SBATCH --gpus-per-task=1
 #SBATCH --gpus=1
 
 # If you are using arrays, specify the number of tasks in the array
