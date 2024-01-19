@@ -29,13 +29,13 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C, M * N * sizeof(float), cudaMemcpyHostToDevice));
 
     // Asegúrate de que el número de hilos por bloque no sea mayor que el máximo permitido
-    dim3 threadsPerBlock(WARP_SIZE, WARP_SIZE); // 1024 threads per block
-    dim3 blocksPerGrid((N + threadsPerBlock.x - 1) / threadsPerBlock.x,
-                       (M + threadsPerBlock.y - 1) / threadsPerBlock.y);
+    dim3 blockDim(WARP_SIZE, WARP_SIZE); // 1024 threads per block
+    dim3 gridDim((N + blockDim.x - 1) / blockDim.x,
+                 (M + blockDim.y - 1) / blockDim.y);
 
     // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_global<<<blocksPerGrid, threadsPerBlock>>>(d_C, d_A, d_B, M, N, K, 1.0f, 1.0f);
+    cuda_fma_global<<<gridDim, blockDim>>>(d_C, d_A, d_B, M, N, K, 1.0f, 1.0f);
     cudaCheckError();
     gpuErrchk(cudaEventRecord(stop));
 
