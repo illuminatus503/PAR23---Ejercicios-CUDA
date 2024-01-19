@@ -12,10 +12,12 @@
 #include <mma.h>
 using namespace nvcuda; // compilar con
 
-__global__ void cuda_fma_wmma(half *a, half *b, float *c,
-                              int M, int N, int K,
-                              float alpha, float beta)
+__global__ void cuda_gemm_wmma(float *C, const half *A, const half *B,
+                               const int M, const int N, const int K,
+                               const float alpha, const float beta)
 {
+    int i;
+
     // Leading dimensions. Packed with no transpositions.
     int lda = M;
     int ldb = K;
@@ -34,7 +36,7 @@ __global__ void cuda_fma_wmma(half *a, half *b, float *c,
     wmma::fill_fragment(acc_frag, 0.0f);
 
     // Loop over k
-    for (int i = 0; i < K; i += WMMA_K)
+    for (i = 0; i < K; i += WMMA_K)
     {
         int aRow = warpM * WMMA_M;
         int aCol = i;
@@ -46,8 +48,8 @@ __global__ void cuda_fma_wmma(half *a, half *b, float *c,
         if (aRow < M && aCol < K && bRow < K && bCol < N)
         {
             // Load the inputs
-            wmma::load_matrix_sync(a_frag, a + aRow + aCol * lda, lda);
-            wmma::load_matrix_sync(b_frag, b + bRow + bCol * ldb, ldb);
+            wmma::load_matrix_sync(a_frag, A + aRow + aCol * lda, lda);
+            wmma::load_matrix_sync(b_frag, B + bRow + bCol * ldb, ldb);
 
             // Perform the matrix multiplication
             wmma::mma_sync(acc_frag, a_frag, b_frag, acc_frag);
@@ -60,15 +62,24 @@ __global__ void cuda_fma_wmma(half *a, half *b, float *c,
 
     if (cRow < M && cCol < N)
     {
-        wmma::load_matrix_sync(c_frag, c + cRow + cCol * ldc, ldc, wmma::mem_col_major);
+        wmma::load_matrix_sync(c_frag, C + cRow + cCol * ldc, ldc, wmma::mem_col_major);
 
 #pragma unroll
-        for (int i = 0; i < c_frag.num_elements; i++)
+        for (i = 0; i < c_frag.num_elements; i++)
         {
             c_frag.x[i] = alpha * acc_frag.x[i] + beta * c_frag.x[i];
         }
 
         // Store the output
-        wmma::store_matrix_sync(c + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
+        wmma::store_matrix_sync(C + cRow + cCol * ldc, c_frag, ldc, wmma::mem_col_major);
+    }
+}
+
+__global__ void convertFp32ToFp16(half *out, float *in, int n)
+{
+    int idx = blockDim.x * blockIdx.x + threadIdx.x;
+    if (idx < n)
+    {
+        out[idx] = in[idx];
     }
 }

@@ -77,7 +77,7 @@ int main()
         time_cpu = fma_cpu(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
 
         // FMA en GPU (memoria global)
-        time_naive_gpu = fma_global_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
+        time_naive_gpu = fma_gpu_global(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
 
         // Guardar métricas
         times_cpu_var[i] = time_cpu;
@@ -109,7 +109,7 @@ int main()
         time_cpu = fma_cpu(A, N, M, B, M, P, C, N, P, D_cpu, N, P);
 
         // FMA en GPU (memoria global)
-        time_naive_gpu = fma_global_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
+        time_naive_gpu = fma_gpu_global(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
 
         // Guardar métricas
         times_cpu_stress[i] = time_cpu;

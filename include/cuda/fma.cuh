@@ -2,80 +2,49 @@
 #define __FADD_CUH__
 
 /**
- * @brief Operación FMADD: Fused-Multiply-Add en GPU
+ * @brief Operación FMA (fused multiply-add) en GPU, memoria global.
  *
- * @param A_ Matriz A(N x M1) de float de entrada
- * @param N1
- * @param M1
- * @param B_ Matriz B(M1 x M) de float de entrada
- * @param N2
- * @param M2
- * @param C_ Matriz C(N x M) de float de entrada
- * @param N3
- * @param M3
- * @param D Matriz D(N x M) de float
+ * @param D Matriz de salida: D = A * B + C, float M x N
+ * @param A float, M x K
+ * @param B float, K x N
+ * @param C float, M x N
  * @param N
  * @param M
- * @param gpu_array un array de propiedades del sistema de aceleradores
- * actual
- * @return double Tiempo de ejecución de la operación en ms.
+ * @param K
+ * @return double Tiempo de ejecución de la operación, en milisegundos
  */
-double fma_global_gpu(float *A_, int N1, int M1,
-                      float *B_, int N2, int M2,
-                      float *C_, int N3, int M3,
-                      float *D, int N, int M,
-                      struct info_t *gpu_array);
+double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
+                      const int M, const int N, const int K);
 
 /**
- * @brief Operación FMADD: Fused-Multiply-Add en GPU.
- * Utilizando memoria compartida.
+ * @brief Operación FMA (fused multiply-add) en GPU, usando memoria compartida
+ * de bloque.
  *
- * @param A_ Matriz A(N x M1) de float de entrada
- * @param N1
- * @param M1
- * @param B_ Matriz B(M1 x M) de float de entrada
- * @param N2
- * @param M2
- * @param C_ Matriz C(N x M) de float de entrada
- * @param N3
- * @param M3
- * @param D Matriz D(N x M) de float
+ * @param D Matriz de salida: D = A * B + C, float M x N
+ * @param A float, M x K
+ * @param B float, K x N
+ * @param C float, M x N
  * @param N
  * @param M
- * @param gpu_array un array de propiedades del sistema de aceleradores
- * actual
- * @return double Tiempo de ejecución de la operación en ms.
+ * @param K
+ * @return double Tiempo de ejecución de la operación, en milisegundos
  */
-double fma_shared_gpu(float *A_, int N1, int M1,
-                      float *B_, int N2, int M2,
-                      float *C_, int N3, int M3,
-                      float *D, int N, int M,
-                      struct info_t *gpu_array);
+double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
+                      const int M, const int N, const int K);
 
 /**
- * @brief Operación FMADD: Fused-Multiply-Add en GPU.
- * Utilizando tensor cores & a API Warp Matrix Multiply
- * Accumulate (WMMA).
+ * @brief Operación FMA (fused multiply-add) en GPU, usando tensor cores.
  *
- * @param A_ Matriz A(N x M1) de float de entrada
- * @param N1
- * @param M1
- * @param B_ Matriz B(M1 x M) de float de entrada
- * @param N2
- * @param M2
- * @param C_ Matriz C(N x M) de float de entrada
- * @param N3
- * @param M3
- * @param D Matriz D(N x M) de float
+ * @param D Matriz de salida: D = A * B + C, float M x N
+ * @param A float, M x K
+ * @param B float, K x N
+ * @param C float, M x N
  * @param N
  * @param M
- * @param gpu_array un array de propiedades del sistema de aceleradores
- * actual
- * @return double Tiempo de ejecución de la operación en ms.
+ * @param K
+ * @return double Tiempo de ejecución de la operación, en milisegundos
  */
-double fma_wmma_gpu(float *A_, int N1, int M1,
-                    float *B_, int N2, int M2,
-                    float *C_, int N3, int M3,
-                    float *D, int N, int M);
+double fma_gpu_wmma(float *D, const float *A, const float *B, const float *C,
+                    const int M, const int N, const int K);
 
 #endif

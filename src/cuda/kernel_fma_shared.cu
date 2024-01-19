@@ -1,27 +1,28 @@
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
-                                   int N, int M, int P)
+__global__ void cuda_gemm_shared(float *C, const float *A, const float *B,
+                                 const int M, const int N, const int K,
+                                 const float alpha, const float beta)
 {
-    int i, j, k, K;
+    int i, j, k, K_;
     int tile_, tile_i, tile_j;
     float sum = 0.0;
 
-    // Inicializamos los tiles de A_ y B_
+    // Inicializamos los tiles de A y B
     __shared__ float A_shared[TILE_SIZE][TILE_SIZE];
     __shared__ float B_shared[TILE_SIZE][TILE_SIZE];
 
-    // Calculamos los índices i, j de la matriz D
+    // Calculamos los índices i, j de la matriz C
     i = blockIdx.y * blockDim.y + threadIdx.y;
     j = blockIdx.x * blockDim.x + threadIdx.x;
 
-    for (tile_ = 0; tile_ < (M - 1) / TILE_SIZE + 1; tile_++)
+    for (tile_ = 0; tile_ < (K - 1) / TILE_SIZE + 1; tile_++)
     {
         // Load de la submatriz A_shared
         tile_j = tile_ * TILE_SIZE + threadIdx.x;
-        if (i < N && tile_j < M)
+        if (i < M && tile_j < K)
         {
-            A_shared[threadIdx.y][threadIdx.x] = A_[i * M + tile_j];
+            A_shared[threadIdx.y][threadIdx.x] = A[i * K + tile_j];
         }
         else
         {
@@ -30,9 +31,9 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
 
         // Load de la submatriz B_shared
         tile_i = tile_ * TILE_SIZE + threadIdx.y;
-        if (tile_i < M && j < P)
+        if (tile_i < K && j < N)
         {
-            B_shared[threadIdx.y][threadIdx.x] = B_[tile_i * P + j];
+            B_shared[threadIdx.y][threadIdx.x] = B[tile_i * N + j];
         }
         else
         {
@@ -42,8 +43,8 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
         __syncthreads();
 
         // Ajuste en el bucle de multiplicación para manejar el caso de baldosas parciales
-        K = (tile_ == (M - 1) / TILE_SIZE) ? M % TILE_SIZE : TILE_SIZE;
-        for (k = 0; k < K; k++)
+        K_ = (tile_ == (K - 1) / TILE_SIZE) ? K % TILE_SIZE : TILE_SIZE;
+        for (k = 0; k < K_; k++)
         {
             sum += A_shared[threadIdx.y][k] * B_shared[k][threadIdx.x];
         }
@@ -51,9 +52,8 @@ __global__ void cuda_fma_shared(float *A_, float *B_, float *C_, float *D,
         __syncthreads();
     }
 
-    // Escritura en mem. global de device (una sola vez)
-    if (i < N && j < P)
+    if (i < M && j < N)
     {
-        D[i * P + j] = sum + C_[i * P + j];
+        C[i * N + j] = alpha * sum + beta * C[i * N + j];
     }
 }
