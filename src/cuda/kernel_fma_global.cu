@@ -1,7 +1,8 @@
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_global(float *D, const float *A_, const float *B_, const float *C_,
-                                const int M, const int N, const int K)
+__global__ void cuda_fma_global(float *C, const float *A, const float *B,
+                                const int M, const int N, const int K,
+                                const float alpha, const float beta)
 {
     int i, j, k;
     float sum;
@@ -18,11 +19,11 @@ __global__ void cuda_fma_global(float *D, const float *A_, const float *B_, cons
      * Calcula el producto escalar de la fila i de A, columna j de B y
      * le suma el valor Cij: Dij = Cij + Ai_ · B_j
      */
-    sum = C_[i * N + j];
+    sum = 0.0f;
     for (k = 0; k < K; k++)
     {
-        sum += A_[i * K + k] * B_[k * N + j];
+        sum += A[i * K + k] * B[k * N + j];
     }
 
-    D[i * N + j] = sum;
+    C[i * N + j] = alpha * sum + beta * C[i * N + j];
 }
