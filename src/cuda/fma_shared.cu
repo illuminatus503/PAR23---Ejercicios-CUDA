@@ -13,7 +13,7 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
 {
     cudaEvent_t start, stop;
     float exe_time_ms = 0.0;
-    float *d_A, *d_B, *d_C, *d_D;
+    float *d_A, *d_B, *d_C;
 
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
@@ -22,7 +22,6 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaMalloc((void **)&d_A, M * K * sizeof(float)));
     gpuErrchk(cudaMalloc((void **)&d_B, K * N * sizeof(float)));
     gpuErrchk(cudaMalloc((void **)&d_C, M * N * sizeof(float)));
-    gpuErrchk(cudaMalloc((void **)&d_D, M * N * sizeof(float)));
 
     // Copiamos los datos necesarios para la operación: matrices A, B y C
     gpuErrchk(cudaMemcpy((void *)d_A, (const void *)A, M * K * sizeof(float), cudaMemcpyHostToDevice));
@@ -36,12 +35,12 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
 
     // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_shared<<<gridDim, blockDim>>>(d_A, d_B, d_C, d_D, M, K, N);
+    cuda_fma_shared<<<gridDim, blockDim>>>(d_C, d_A, d_B, M, N, K, 1.0f, 1.0f);
     cudaCheckError();
     gpuErrchk(cudaEventRecord(stop));
 
     // Copy data from device array to host array
-    gpuErrchk(cudaMemcpy((void *)D, (const void *)d_D, M * N * sizeof(float), cudaMemcpyDeviceToHost));
+    gpuErrchk(cudaMemcpy((void *)D, (const void *)d_C, M * N * sizeof(float), cudaMemcpyDeviceToHost));
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
 
@@ -49,7 +48,6 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaFree(d_A));
     gpuErrchk(cudaFree(d_B));
     gpuErrchk(cudaFree(d_C));
-    gpuErrchk(cudaFree(d_D));
 
     return (double)exe_time_ms;
 }
