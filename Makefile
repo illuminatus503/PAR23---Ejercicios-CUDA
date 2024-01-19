@@ -3,7 +3,7 @@
 CUDA_ROOT_DIR = /usr/local/cuda
 # CC compiler options:
 CC = g++
-CC_FLAGS = -Wall -g -O2 -I$(INC_DIR)
+CC_FLAGS = -Wall -g -O2 -I$(INC_DIR) -fopenmp
 CC_LIBS = -lm
 # NVCC compiler options:
 NVCC = nvcc
