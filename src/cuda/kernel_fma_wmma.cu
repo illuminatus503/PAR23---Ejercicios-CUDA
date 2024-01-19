@@ -35,16 +35,17 @@ __global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D,
     // Perform AB = A*B
     a_row = ix * WMMA_M;
     b_row = iy * WMMA_N;
-    for (int k = 0; k < K_padded; k += WMMA_K)
+    for (int n = 0; n < N_padded; n += WMMA_N)
     {
-        a_col = k;
-        b_col = k;
+        a_col = n;
+        b_col = n;
 
-        if (a_row < M_total && a_col < K_total && b_row < K_total && b_col < N_total)
+        // Check boundaries for actual dimensions, not padded dimensions
+        if (a_row < M_total && a_col < N_total && b_row < N_total && b_col < K_total)
         {
             // Load the inputs
-            wmma::load_matrix_sync(a_frag, A + a_col + a_row * K_padded, K_padded);
-            wmma::load_matrix_sync(b_frag, B + b_col + b_row * K_padded, K_padded);
+            wmma::load_matrix_sync(a_frag, A + a_row * N_padded + a_col, M_padded);
+            wmma::load_matrix_sync(b_frag, B + b_row * K_padded + b_col, N_padded);
 
             // Perform the matrix multiplication
             wmma::mma_sync(ab_frag, a_frag, b_frag, ab_frag);
@@ -52,18 +53,20 @@ __global__ void cuda_fma_wmma(half *A, half *B, float *C, float *D,
     }
 
     // Perform D = AB + C
-    c_col = b_row;
     c_row = a_row;
-    if (c_row < M_total && c_col < N_total)
+    c_col = b_row;
+    if (c_row < M_total && c_col < K_total)
     {
-        wmma::load_matrix_sync(c_frag, C + c_col + c_row * N_padded, N_padded, wmma::mem_row_major);
+        // Load C fragment considering actual size and padded size
+        wmma::load_matrix_sync(c_frag, C + c_col + c_row * K_padded, K_padded, wmma::mem_row_major);
 
+        // Summation and storing the output
         for (int i = 0; i < c_frag.num_elements; i++)
         {
-            c_frag.x[i] = ab_frag.x[i] + c_frag.x[i];
+            c_frag.x[i] += ab_frag.x[i];
         }
 
-        // Store the output
-        wmma::store_matrix_sync(D + c_col + c_row * N_padded, c_frag, N_padded, wmma::mem_row_major);
+        // Store the result in D considering actual size and padded size
+        wmma::store_matrix_sync(D + c_row * K_padded + c_col, c_frag, K_padded, wmma::mem_row_major);
     }
 }
