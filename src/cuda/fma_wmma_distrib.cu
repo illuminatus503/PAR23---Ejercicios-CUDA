@@ -20,14 +20,15 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
 
-    half *d_A, *d_B;
-    float *d_C;
-
     // Vamos a calcular el espacio en memoria para la distribución
-    size_t free_mem, total_mem;
-    gpuErrchk(cudaMemGetInfo(&free_mem, &total_mem));
+    const int num_multiprocessors = 36; // del ej. 1
+    int rows_per_stream = (num_multiprocessors > 0) ? M / num_multiprocessors : 0;
+    int num_streams = (rows_per_stream > 0) ? max(1, min(num_multiprocessors, M / rows_per_stream)) : 0;
 
-    // const int num_streams =
+    // Crear streams
+    cudaStream_t streams[num_streams];
+    for (int i = 0; i < num_streams; ++i)
+        gpuErrchk(cudaStreamCreate(&streams[i]));
 
     // Calculamos el espacio de las matrices padded en el dispositivo
     const int M_padded = (M + WMMA_M - 1) / WMMA_M * WMMA_M;
@@ -65,31 +66,59 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
         }
     }
 
-    // Reservamos memoria para las matrices del dispositivo
-    gpuErrchk(cudaMalloc((void **)&d_A, M_padded * K_padded * sizeof(half)));
-    gpuErrchk(cudaMalloc((void **)&d_B, K_padded * N_padded * sizeof(half)));
-    gpuErrchk(cudaMalloc((void **)&d_C, M_padded * N_padded * sizeof(float)));
+    // Reservar memoria para B una sola vez, ya que no cambia
+    half *d_B_sub;
+    gpuErrchk(cudaMalloc((void **)&d_B_sub, K_padded * N_padded * sizeof(half)));
+    gpuErrchk(cudaMemcpyAsync(d_B_sub, B_padded, K_padded * N_padded * sizeof(half), cudaMemcpyHostToDevice, streams[0]));
 
-    // Cambiar las copias de memoria y la llamada al kernel para usar las matrices padded
-    gpuErrchk(cudaMemcpy((void *)d_A, (const void *)A_padded, M_padded * K_padded * sizeof(half), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy((void *)d_B, (const void *)B_padded, K_padded * N_padded * sizeof(half), cudaMemcpyHostToDevice));
-    gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C_padded, M_padded * N_padded * sizeof(float), cudaMemcpyHostToDevice));
+    // Reservar memoria para d_A_sub y d_C_sub
+    half *d_A_sub;
+    float *d_C_sub;
+    int subM = M / num_streams;                                                             // Tamaño de cada submatriz
+    gpuErrchk(cudaMalloc((void **)&d_A_sub, subM * K_padded * sizeof(half) * num_streams)); // Reservar memoria para todos los streams
+    gpuErrchk(cudaMalloc((void **)&d_C_sub, subM * N_padded * sizeof(float) * num_streams));
 
-    // Set the CUDA layout
-    dim3 blockDim(4 * WARP_SIZE, 4);
-    dim3 gridDim((M_padded + (WMMA_M * blockDim.x / WARP_SIZE - 1)) / (WMMA_M * blockDim.x / WARP_SIZE),
-                 (N_padded + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y));
-
-    // Launch kernel
     gpuErrchk(cudaEventRecord(start));
-    cuda_fma_wmma<<<gridDim, blockDim>>>(d_C, d_B, d_A, M_padded, N_padded, K_padded, 1.0f, 1.0f);
-    cudaCheckError();
+    for (int s = 0; s < num_streams; ++s)
+    {
+        int offset = s * subM * K_padded;         // Desplazamiento para la submatriz actual
+        half *d_A_sub_current = d_A_sub + offset; // Puntero al segmento actual
+        float *d_C_sub_current = d_C_sub + offset;
+
+        // Copiar datos al dispositivo en el stream actual
+        gpuErrchk(cudaMemcpyAsync(d_A_sub_current, A_padded + offset, subM * K_padded * sizeof(half), cudaMemcpyHostToDevice, streams[s]));
+        gpuErrchk(cudaMemcpyAsync(d_B_sub, B_padded, K_padded * N_padded * sizeof(half), cudaMemcpyHostToDevice, streams[s]));
+        gpuErrchk(cudaMemcpyAsync(d_C_sub_current, C_padded + offset, subM * N_padded * sizeof(float), cudaMemcpyHostToDevice, streams[s]));
+
+        // Dimensiones del grid y del bloque para el stream actual
+        dim3 blockDim(4 * WARP_SIZE, 4);
+        dim3 gridDim((subM + (WMMA_M * blockDim.x / WARP_SIZE - 1)) / (WMMA_M * blockDim.x / WARP_SIZE),
+                     (N_padded + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y));
+
+        // Lanzar kernel en el stream actual
+        cuda_fma_wmma<<<gridDim, blockDim, 0, streams[s]>>>(d_C_sub_current, d_B_sub, d_A_sub_current, subM, N_padded, K_padded, 1.0f, 1.0f);
+
+        // Copiar los resultados de vuelta al host en el stream actual
+        gpuErrchk(cudaMemcpyAsync(C_padded + offset, d_C_sub_current, subM * N_padded * sizeof(float), cudaMemcpyDeviceToHost, streams[s]));
+    }
+
     gpuErrchk(cudaEventRecord(stop));
 
-    // Copy data from device array to host array
-    gpuErrchk(cudaMemcpy((void *)C_padded, (const void *)d_C, M_padded * N_padded * sizeof(float), cudaMemcpyDeviceToHost));
+    // Esperar a que todos los streams completen su trabajo
+    for (int i = 0; i < num_streams; ++i)
+        gpuErrchk(cudaStreamSynchronize(streams[i]));
+
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
+
+    // Liberar recursos
+    gpuErrchk(cudaFree(d_A_sub));
+    gpuErrchk(cudaFree(d_B_sub));
+    gpuErrchk(cudaFree(d_C_sub));
+
+    // Liberar los streams
+    for (int i = 0; i < num_streams; ++i)
+        gpuErrchk(cudaStreamDestroy(streams[i]));
 
     // Recuperamos los datos a la matriz D original (sin padding)
     for (int i = 0; i < M; ++i)
@@ -99,11 +128,6 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
             D[i * N + j] = C_padded[i * N_padded + j];
         }
     }
-
-    // Liberamos los recursos del dispositivo
-    gpuErrchk(cudaFree(d_A));
-    gpuErrchk(cudaFree(d_B));
-    gpuErrchk(cudaFree(d_C));
 
     // Liberar la memoria de las matrices padded en el host
     free(A_padded);
