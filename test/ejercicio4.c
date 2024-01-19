@@ -64,7 +64,7 @@ int main()
         gen_matrices(N, M, P, A, B, C);
 
         time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
-        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P, &gpu_array);
+        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P);
 
         times_shared_gpu_var[i] = time_shared_gpu;
         times_wmma_gpu_var[i] = time_wmma_gpu;
@@ -91,7 +91,7 @@ int main()
         gen_matrices(N, M, P, A, B, C);
 
         time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
-        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P, &gpu_array);
+        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P);
 
         times_shared_gpu_stress[i] = time_shared_gpu;
         times_wmma_gpu_stress[i] = time_wmma_gpu;

@@ -76,7 +76,6 @@ double fma_shared_gpu(float *A_, int N1, int M1,
 double fma_wmma_gpu(float *A_, int N1, int M1,
                     float *B_, int N2, int M2,
                     float *C_, int N3, int M3,
-                    float *D, int N, int M,
-                    struct info_t *gpu_array);
+                    float *D, int N, int M);
 
 #endif

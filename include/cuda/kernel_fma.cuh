@@ -19,8 +19,12 @@ const int WMMA_M = 16;
 const int WMMA_N = 16;
 const int WMMA_K = 16;
 
-__global__ void cuda_fma_wmma(half *A_, half *B_, float *C_, float *D,
-                              int M_total, int N_total, int K_total,
-                              int M_padded, int N_padded, int K_padded);
+// Performs an MxNxK GEMM (C=alpha*A*B + beta*C) assuming:
+//  1) Matrices are packed in memory.
+//  2) M, N and K are multiples of 16.
+//  3) Neither A nor B are transposed.
+// Note: This is NOT a high performance example but is for demonstration purposes only
+//       For a high performance code please use the GEMM provided in cuBLAS.
+__global__ void cuda_fma_wmma(half *a, half *b, float *c, int M, int N, int K, float alpha, float beta);
 
 #endif
