@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
            time_cpu);
 
     // ! FMA en GPU (naïve)
-    time_naive_gpu = fma_global_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
+    time_naive_gpu = fma_gpu_global(A, N, M, B, M, P, C, N, P, D_gpu, N, P);
     printf("FMA (GPU, naïve), %3.3f, %3.3f\n",
            time_naive_gpu, matrix_infty_dist(D_cpu, D_gpu, N, P));
 
