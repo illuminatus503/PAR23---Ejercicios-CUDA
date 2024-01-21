@@ -7,13 +7,13 @@
 #include "../include/cuda/fma.cuh"
 #include "../include/cuda/utils.cuh"
 
-#define M 1024
-#define N 100
-#define K 1024
+#define M 10
+#define N 10
+#define K 10
 
-#define M_split 100 // si M_split => M, entonces, se toman filas de 1 en 1
-#define N_split 100 // si N_split => N, entonces, se toman columnas de 1 en 1
-#define K_split 100 // si K_split >= K, entonces, se toman filas/columnas de 1 en 1
+#define M_split 1 // si M_split => M, entonces, se toman filas de 1 en 1
+#define N_split 1 // si N_split => N, entonces, se toman columnas de 1 en 1
+#define K_split 1 // si K_split >= K, entonces, se toman filas/columnas de 1 en 1
 
 #define TOL (float)1e-4
 

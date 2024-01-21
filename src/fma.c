@@ -32,26 +32,6 @@ double fma_cpu(float *D, const float *A, const float *B, const float *C,
     return timing_cpu(begin, end);
 }
 
-void fma_cpu_nontiming(float *D, const float *A, const float *B, const float *C,
-                       const int M, const int N, const int K)
-{
-    int i, j, k;
-
-#pragma omp parallel for private(i, j, k) schedule(static)
-    for (i = 0; i < M; i++)
-    {
-#pragma omp simd
-        for (j = 0; j < N; j++)
-        {
-            D[i * N + j] = C[i * N + j];
-            for (k = 0; k < K; k++)
-            {
-                D[i * N + j] += A[i * K + k] * B[k * N + j];
-            }
-        }
-    }
-}
-
 double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
                        const int M, const int N, const int K,
                        const int M_split, const int N_split, const int K_split)
@@ -120,11 +100,11 @@ double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
                 A_sub = (float *)&(A[i * K + k]);
                 B_sub = (float *)&(B[k * N + j]);
 
-                // Realizar la operación FMA en las submatrices
-                #pragma omp parallel for private(i_sub, j_sub, k_sub) schedule(static)
+// Realizar la operación FMA en las submatrices
+#pragma omp parallel for private(i_sub, j_sub, k_sub) schedule(static)
                 for (i_sub = 0; i_sub < i_size; i_sub++)
                 {
-                    #pragma omp simd
+#pragma omp simd
                     for (j_sub = 0; j_sub < j_size; j_sub++)
                     {
                         for (k_sub = 0; k_sub < k_size; k_sub++)

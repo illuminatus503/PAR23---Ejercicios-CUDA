@@ -24,4 +24,8 @@ __global__ void cuda_fma_wmma(float *C, const half *A, const half *B,
                               const int M, const int N, const int K,
                               const float alpha, const float beta);
 
+__global__ void cuda_fma_wmma_rows(float *C, const half *A, const half *B,
+                                   const int M, const int N, const int K,
+                                   const float alpha, const float beta);
+
 #endif
