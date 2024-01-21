@@ -57,6 +57,7 @@ double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
                        const int M_split, const int N_split, const int K_split)
 {
     int i, j, k;
+    int i_sub, j_sub, k_sub;
     int i_size, j_size, k_size;
 
     float *A_sub, *B_sub, *C_sub, *D_sub;
@@ -101,6 +102,15 @@ double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
             D_sub = (float *)&(D[i * N + j]);
             C_sub = (float *)&(C[i * N + j]);
 
+            // Inicializamos D_sub con elementos de C
+            for (i_sub = 0; i_sub < i_size; i_sub++)
+            {
+                for (j_sub = 0; j_sub < j_size; j_sub++)
+                {
+                    D_sub[i_sub * N + j_sub] = C_sub[i_sub * N + j_sub];
+                }
+            }
+
             // Agregamos las multiplicaciones de matrices sucesivas
             for (k = 0; k < K; k += Ksub)
             {
@@ -111,7 +121,18 @@ double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
                 B_sub = (float *)&(B[k * N + j]);
 
                 // Realizar la operación FMA en las submatrices
-                fma_cpu_nontiming(D_sub, A_sub, B_sub, C_sub, i_size, j_size, k_size);
+                #pragma omp parallel for private(i_sub, j_sub, k_sub) schedule(static)
+                for (i_sub = 0; i_sub < i_size; i_sub++)
+                {
+                    #pragma omp simd
+                    for (j_sub = 0; j_sub < j_size; j_sub++)
+                    {
+                        for (k_sub = 0; k_sub < k_size; k_sub++)
+                        {
+                            D_sub[i_sub * N + j_sub] += A_sub[i_sub * K + k_sub] * B_sub[k_sub * N + j_sub];
+                        }
+                    }
+                }
             }
         }
     }

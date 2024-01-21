@@ -11,8 +11,6 @@
 #define N 10
 #define K 10
 
-#define TOL (float)1e-4
-
 int main()
 {
     float A[M * K], B[K * N], C[M * N], D[M * N], D_GPU[M * N];
@@ -37,11 +35,7 @@ int main()
     // Ejecutamos la prueba de FMA en GPU (mem. global)
     exe_time_ms = fma_wmma_gpu(D_GPU, A, B, C, M, N, K);
     printf("GPU (wmma) took %fms\n", exe_time_ms);
-
     printf("MSE: %f\n", mse(D, D_GPU, M, N));
-    print_mat(D, M, N);
-    printf("\n");
-    print_mat(D_GPU, M, N);
 
     return 0;
 }

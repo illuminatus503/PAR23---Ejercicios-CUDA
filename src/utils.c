@@ -89,9 +89,10 @@ void print_split(float *A, const int M, const int N,
     printf("A: \n");
     for (i = 0; i < M; i += Msub)
     {
+        i_sub = (i + Msub > M) ? M - i : Msub;
+
         for (j = 0; j < N; j += Nsub)
         {
-            i_sub = (i + Msub > M) ? M - i : Msub;
             j_sub = (j + Nsub > N) ? N - j : Nsub;
 
             printf("Submatriz A[%d:%d, %d:%d]:\n", i, i + i_sub - 1, j, j + j_sub - 1);
@@ -139,4 +140,23 @@ float mse(float *A_, float *B_, int rows, int cols)
     }
 
     return error / size;
+}
+
+int allequal(const float *A, const float *B, const int M, const int N, const float tol)
+{
+    int i;
+    int errors = 0;
+
+    float relative_err;
+
+    for (i = 0; i < M * N; i++)
+    {
+        relative_err = fabs(A[i] - B[i]) / B[i];
+        if (relative_err >= tol)
+        {
+            errors++;
+        }
+    }
+
+    return errors;
 }

@@ -94,4 +94,19 @@ float mse(float *A_, float *B_, int rows, int cols);
 void print_split(float *A, const int M, const int N,
                  const int M_split, const int N_split);
 
+/**
+ * @brief Calcula si dos matrices son suficientemente similares, dada una
+ * tolerancia.
+ *
+ * @param A float, M x N
+ * @param B float, M x N
+ * @param M
+ * @param N
+ * @param tol un valor float pequeño: por ejemplo, 1e-4
+ * @return int 0 si son similares (dado tol.); > 0, si existen diferencias.
+ */
+int allequal(const float *A, const float *B,
+             const int M, const int N,
+             const float tol);
+
 #endif

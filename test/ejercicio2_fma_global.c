@@ -11,8 +11,6 @@
 #define N 10
 #define K 10
 
-#define TOL (float)1e-4
-
 int main()
 {
     float A[M * K], B[K * N], C[M * N], D[M * N], D_GPU[M * N];
@@ -42,23 +40,6 @@ int main()
     print_mat(D, M, N);
     printf("\n");
     print_mat(D_GPU, M, N);
-
-    // Calculamos los errores entre ambas matrices
-    // errores = allequal(D, D_GPU, M, N, TOL);
-
-    // if (errores)
-    // {
-    //     fprintf(stderr,
-    //             "[AVISO] Existen %d diferencias entre el cómputo en CPU y en GPU (global) (tol. %f)\n",
-    //             errores, TOL);
-
-    //     if (M * N < 200)
-    //     {
-    //         print_mat(D, M, N);
-    //         printf("\n");
-    //         print_mat(D_GPU, M, N);
-    //     }
-    // }
 
     return 0;
 }
