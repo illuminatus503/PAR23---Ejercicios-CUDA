@@ -11,15 +11,15 @@
 #include "../../include/utils.h"
 #include "../../include/cuda/error.cuh"
 
-double fma_wmma_gpu_distrib(float *D, const int num_streams,
-                            const float *A, const float *B, const float *C,
-                            const int M, const int N, const int K)
+double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const float *C,
+                            const int M, const int N, const int K,
+                            const int M_split, const int N_split, const int K_split)
 {
-    // cudaEvent_t start, stop;
-    // float exe_time_ms = 0.0;
+    cudaEvent_t start, stop;
+    float exe_time_ms = 0.0;
 
-    // gpuErrchk(cudaEventCreate(&start));
-    // gpuErrchk(cudaEventCreate(&stop));
+    gpuErrchk(cudaEventCreate(&start));
+    gpuErrchk(cudaEventCreate(&stop));
 
     // // Calculamos el tamaño de las submatrices
     // int subM = (M + num_streams - 1) / num_streams; // cuantas matrices por filas
@@ -113,6 +113,5 @@ double fma_wmma_gpu_distrib(float *D, const int num_streams,
     // for (int i = 0; i < num_streams; ++i)
     //     gpuErrchk(cudaStreamDestroy(streams[i]));
 
-    // return (double)exe_time_ms;
-    return 0.0;
+    return (double)exe_time_ms;
 }
