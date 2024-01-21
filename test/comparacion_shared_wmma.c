@@ -12,15 +12,15 @@
 #define NUM_SIZES_VAR 3
 #define NUM_SIZES_STRESS 3
 
-#define size_float(N, M, P) ((N * M + M * P + 2 * N * P) * sizeof(float)) / 1048576.0
-#define size_mixed16(N, M, P) ((N * M + M * P) * sizeof(half) + (2 * N * P) * sizeof(float)) / 1048576.0
+#define size_float(M, N, K) ((M * K + K * N + M * N) * sizeof(float)) / 1048576.0
+#define size_mixed16(M, N, K) ((M * K + K * N) * sizeof(half) + (M * N) * sizeof(float)) / 1048576.0
 
 int main()
 {
     double time_shared_gpu, time_wmma_gpu;
     float *A, *B, *C, *D_gpu, *D_gpu_shared;
 
-    int N, M, P;
+    int M, N, K;
     int i;
 
     double times_shared_gpu_var[NUM_SIZES_VAR], times_wmma_gpu_var[NUM_SIZES_VAR];
@@ -49,54 +49,55 @@ int main()
 
     for (i = 0; i < NUM_SIZES_VAR; i++)
     {
-        N = sizes_var[i][0];
-        M = sizes_var[i][1];
-        P = sizes_var[i][2];
+        M = sizes_var[i][0];
+        N = sizes_var[i][1];
+        K = sizes_var[i][2];
 
-        A = (i == 0) ? (float *)malloc(N * M * sizeof(float)) : (float *)realloc(A, N * M * sizeof(float));
-        B = (i == 0) ? (float *)malloc(M * P * sizeof(float)) : (float *)realloc(B, M * P * sizeof(float));
-        C = (i == 0) ? (float *)malloc(N * P * sizeof(float)) : (float *)realloc(C, N * P * sizeof(float));
-        D_gpu = (i == 0) ? (float *)malloc(N * P * sizeof(float)) : (float *)realloc(D_gpu, N * P * sizeof(float));
-        D_gpu_shared = (i == 0) ? (float *)malloc(N * P * sizeof(float)) : (float *)realloc(D_gpu_shared, N * P * sizeof(float));
+        A = (i == 0) ? (float *)malloc(M * K * sizeof(float)) : (float *)realloc(A, M * K * sizeof(float));
+        B = (i == 0) ? (float *)malloc(K * N * sizeof(float)) : (float *)realloc(B, K * N * sizeof(float));
+        C = (i == 0) ? (float *)malloc(M * N * sizeof(float)) : (float *)realloc(C, M * N * sizeof(float));
+        D_gpu = (i == 0) ? (float *)malloc(M * N * sizeof(float)) : (float *)realloc(D_gpu, M * N * sizeof(float));
+        D_gpu_shared = (i == 0) ? (float *)malloc(M * N * sizeof(float)) : (float *)realloc(D_gpu_shared, M * N * sizeof(float));
 
-        memory_required_float_var[i] = size_float(N, M, P);     // in MB
-        memory_required_mixed16_var[i] = size_mixed16(N, M, P); // in MB
-        gen_matrices(N, M, P, A, B, C);
+        memory_required_float_var[i] = size_float(M, N, K);     // in MB
+        memory_required_mixed16_var[i] = size_mixed16(M, N, K); // in MB
+        gen_matrices(A, B, C, M, K, N);                         // Asegurarse de que las dimensiones son correctas
 
-        time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
-        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P);
+        time_shared_gpu = fma_gpu_shared(D_gpu, A, B, C, M, N, K);
+        time_wmma_gpu = fma_wmma_gpu(D_gpu, A, B, C, M, N, K);
 
         times_shared_gpu_var[i] = time_shared_gpu;
         times_wmma_gpu_var[i] = time_wmma_gpu;
-        mse_var[i] = mse(D_gpu, D_gpu_shared, N, P);
-        infty_dist_var[i] = matrix_infty_dist(D_gpu, D_gpu_shared, N, P);
+        mse_var[i] = mse(D_gpu, D_gpu_shared, M, N);
+        infty_dist_var[i] = matrix_infty_dist(D_gpu, D_gpu_shared, M, N);
     }
 
     printf("[!] LANZANDO PRUEBA DE ESTRÉS\n");
 
     for (i = 0; i < NUM_SIZES_STRESS; i++)
     {
-        N = sizes_stress[i][0];
-        M = sizes_stress[i][1];
-        P = sizes_stress[i][2];
+        M = sizes_stress[i][0];
+        N = sizes_stress[i][1];
+        K = sizes_stress[i][2];
 
-        A = (float *)realloc(A, N * M * sizeof(float));
-        B = (float *)realloc(B, M * P * sizeof(float));
-        C = (float *)realloc(C, N * P * sizeof(float));
-        D_gpu = (float *)realloc(D_gpu, N * P * sizeof(float));
-        D_gpu_shared = (float *)realloc(D_gpu_shared, N * P * sizeof(float));
+        A = (float *)realloc(A, M * K * sizeof(float));
+        B = (float *)realloc(B, K * N * sizeof(float));
+        C = (float *)realloc(C, M * N * sizeof(float));
 
-        memory_required_float_stress[i] = size_float(N, M, P);     // in MB
-        memory_required_mixed16_stress[i] = size_mixed16(N, M, P); // in MB
-        gen_matrices(N, M, P, A, B, C);
+        D_gpu = (float *)realloc(D_gpu, M * N * sizeof(float));
+        D_gpu_shared = (float *)realloc(D_gpu_shared, M * N * sizeof(float));
 
-        time_shared_gpu = fma_shared_gpu(A, N, M, B, M, P, C, N, P, D_gpu, N, P, &gpu_array);
-        time_wmma_gpu = fma_wmma_gpu(A, N, M, B, M, P, C, N, P, D_gpu_shared, N, P);
+        memory_required_float_stress[i] = size_float(M, N, K);     // in MB
+        memory_required_mixed16_stress[i] = size_mixed16(M, N, K); // in MB
+        gen_matrices(A, B, C, M, K, N);                            // Asegurarse de que las dimensiones son correctas
+
+        time_shared_gpu = fma_gpu_shared(D_gpu, A, B, C, M, N, K);
+        time_wmma_gpu = fma_wmma_gpu(D_gpu, A, B, C, M, N, K);
 
         times_shared_gpu_stress[i] = time_shared_gpu;
         times_wmma_gpu_stress[i] = time_wmma_gpu;
-        mse_stress[i] = mse(D_gpu, D_gpu_shared, N, P);
-        infty_dist_stress[i] = matrix_infty_dist(D_gpu, D_gpu_shared, N, P);
+        mse_stress[i] = mse(D_gpu, D_gpu_shared, M, N);
+        infty_dist_stress[i] = matrix_infty_dist(D_gpu, D_gpu_shared, M, N);
     }
 
     // Guardamos los resultados en un fichero
