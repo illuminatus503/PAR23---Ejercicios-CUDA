@@ -3,13 +3,13 @@
 
 /**
  * @brief Genera matrices aleatorias para FMA.
- * 
+ *
  * @param A float, M x K
  * @param B float, K x N
  * @param C float, M x N
- * @param M 
- * @param N 
- * @param K 
+ * @param M
+ * @param N
+ * @param K
  */
 void gen_matrices(float *A, float *B, float *C, const int M, const int N, const int K);
 
@@ -80,5 +80,18 @@ double timing_cpu(struct timespec begin, struct timespec end);
  * @return float El MSE entre ambas
  */
 float mse(float *A_, float *B_, int rows, int cols);
+
+/**
+ * @brief Muestra cómo quedaría la partición de una matriz,
+ * usando unos parámetros de partición dados.
+ *
+ * @param A float, M x N
+ * @param M
+ * @param N
+ * @param M_split Número de filas por las que dividir: M / M_split
+ * @param N_split Número de columnas por las que dividir: N / N_split
+ */
+void print_split(float *A, const int M, const int N,
+                 const int M_split, const int N_split);
 
 #endif

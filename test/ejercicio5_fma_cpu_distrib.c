@@ -7,15 +7,15 @@
 #include "../include/cuda/fma.cuh"
 #include "../include/cuda/utils.cuh"
 
-#define M 10
-#define N 10
-#define K 10
+#define M 3
+#define N 3
+#define K 3
 
 #define TOL (float)1e-4
 
 int main()
 {
-    float A[M * K], B[K * N], C[M * N], D[M * N], D_GPU[M * N];
+    float A[M * K], B[K * N], C[M * N], D[M * N], D_DISTRIB[M * N];
     double exe_time_ms;
 
     // ! TEST: las dimensiones de las matrices son compatibles?
@@ -30,18 +30,13 @@ int main()
     // Generamos las matrices
     gen_matrices(A, B, C, M, N, K);
 
-    // Ejecutamos la prueba de FMA
     exe_time_ms = fma_cpu(D, A, B, C, M, N, K);
     printf("CPU took %fms\n", exe_time_ms);
 
-    // Ejecutamos la prueba de FMA en GPU (mem. global)
-    exe_time_ms = fma_wmma_gpu_distrib(D_GPU, A, B, C, M, N, K);
-    printf("GPU (wmma, distributed) took %fms\n", exe_time_ms);
-
-    printf("MSE: %f\n", mse(D, D_GPU, M, N));
-    print_mat(D, M, N);
-    printf("\n");
-    print_mat(D_GPU, M, N);
+    // Ejecutamos la prueba de FMA
+    exe_time_ms = fma_cpu_distrib(D_DISTRIB, A, B, C, M, N, K, 2, 3, 2);
+    printf("CPU took %fms\n", exe_time_ms);
+    printf("MSE: %f\n", mse(D, D_DISTRIB, M, N));
 
     return 0;
 }

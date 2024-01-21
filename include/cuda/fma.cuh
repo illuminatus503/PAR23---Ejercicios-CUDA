@@ -47,10 +47,11 @@ double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
                     const int M, const int N, const int K);
 
 /**
- * @brief Fused-multiply add operation. En GPU, usando tensor cores (WMMA) y 
+ * @brief Fused-multiply add operation. En GPU, usando tensor cores (WMMA) y
  * distribución de tareas.
- * 
+ *
  * @param D D = A * B + C, float M x N
+ * @param num_streams número de streams a lanzar para procesar la matriz
  * @param A float M x N
  * @param B float N x K
  * @param C float M x N
@@ -59,7 +60,8 @@ double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
  * @param K
  * @return double tiempo de ejecución en milisegundos
  */
-double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const float *C,
+double fma_wmma_gpu_distrib(float *D, const int num_streams,
+                            const float *A, const float *B, const float *C,
                             const int M, const int N, const int K);
 
 #endif

@@ -16,4 +16,8 @@
 double fma_cpu(float *D, const float *A, const float *B, const float *C,
                const int M, const int N, const int K);
 
+double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
+                       const int M, const int N, const int K,
+                       const int M_split, const int N_split, const int K_split);
+
 #endif

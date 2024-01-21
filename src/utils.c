@@ -65,6 +65,44 @@ void print_mat(float *A_, int N, int M)
     }
 }
 
+void print_split(float *A, const int M, const int N,
+                 const int M_split, const int N_split)
+{
+    int i, j;
+    int i_sub, j_sub;
+
+    if (M_split <= 0)
+    {
+        perror("M_split is not positive!");
+    }
+
+    if (N_split <= 0)
+    {
+        perror("N_split is not positive!");
+    }
+
+    // Calcular el tamaño de cada submatriz (considerando el padding si es necesario)
+    int Msub = (M + M_split - 1) / M_split;
+    int Nsub = (N + N_split - 1) / N_split;
+
+    printf("Reparto de (M, N): %d, %d\n", Msub, Nsub);
+    printf("A: \n");
+    for (i = 0; i < M; i += Msub)
+    {
+        for (j = 0; j < N; j += Nsub)
+        {
+            i_sub = (i + Msub > M) ? M - i : Msub;
+            j_sub = (j + Nsub > N) ? N - j : Nsub;
+
+            printf("Submatriz A[%d:%d, %d:%d]:\n", i, i + i_sub - 1, j, j + j_sub - 1);
+            print_mat((float *)&(A[j + i * N]), i_sub, j_sub);
+            printf("----------------------------------\n");
+        }
+        printf("\n");
+    }
+    printf("\n");
+}
+
 float matrix_infty_dist(float *A_, float *B_, int N, int M)
 {
     int i, j;
