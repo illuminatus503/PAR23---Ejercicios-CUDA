@@ -27,8 +27,8 @@ double fma_gpu_shared(float *D, float *A, float *B, float *C,
     gpuErrchk(cudaMemcpy((void *)d_B, (const void *)B, K * N * sizeof(float), cudaMemcpyHostToDevice));
     gpuErrchk(cudaMemcpy((void *)d_C, (const void *)C, M * N * sizeof(float), cudaMemcpyHostToDevice));
 
-    // Asegúrate de que el número de hilos por bloque no sea mayor que el máximo permitido
-    dim3 blockDim(WARP_SIZE, WARP_SIZE);
+    // Definimos el layout
+    dim3 blockDim(16, 16);
     dim3 gridDim((N + blockDim.x - 1) / blockDim.x,
                  (M + blockDim.y - 1) / blockDim.y);
 
