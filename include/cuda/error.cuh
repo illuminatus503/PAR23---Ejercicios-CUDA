@@ -2,6 +2,8 @@
 #define __ERRCHK_CUH__
 
 #include <stdbool.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /* Macro for checking cuda errors following a cuda launch or api call
  Taken from: https://gist.github.com/jefflarkin/5390993 */

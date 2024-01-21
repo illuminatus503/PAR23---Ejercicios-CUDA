@@ -10,7 +10,7 @@ double timing_cpu(struct timespec begin, struct timespec end)
     return ((end.tv_sec - begin.tv_sec) * 1e3 + ((end.tv_nsec - begin.tv_nsec) * 1e-6));
 }
 
-void __rand_init(float *A, const int M, const int N)
+void rand_init(float *A, const int M, const int N)
 {
     int i, j;
 
@@ -26,9 +26,9 @@ void __rand_init(float *A, const int M, const int N)
 void gen_matrices(float *A, float *B, float *C,
                   const int M, const int N, const int K)
 {
-    __rand_init(A, M, K);
-    __rand_init(B, K, N);
-    __rand_init(C, M, N);
+    rand_init(A, M, K);
+    rand_init(B, K, N);
+    rand_init(C, M, N);
 }
 
 bool matrix_checkdims(int N1, int M1, int N2, int M2, int N3, int M3, int N, int M)

@@ -19,21 +19,9 @@ double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
 
     struct timespec begin, end;
 
-    if (M_split <= 0)
+    if (M_split <= 0 || N_split <= 0 || K_split <= 0)
     {
-        perror("M_split is not positive!");
-        exit(EXIT_FAILURE);
-    }
-
-    if (N_split <= 0)
-    {
-        perror("N_split is not positive!");
-        exit(EXIT_FAILURE);
-    }
-
-    if (K_split <= 0)
-    {
-        perror("K_split is not positive!");
+        perror("M_split, N_split or K_split is not positive!");
         exit(EXIT_FAILURE);
     }
 

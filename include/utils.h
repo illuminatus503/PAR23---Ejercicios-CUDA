@@ -14,6 +14,15 @@
 void gen_matrices(float *A, float *B, float *C, const int M, const int N, const int K);
 
 /**
+ * @brief Inicializa una matriz con valores float32 aleatorios.
+ *
+ * @param A float M x N
+ * @param M
+ * @param N
+ */
+void rand_init(float *A, const int M, const int N);
+
+/**
  * @brief Checkea si las dimensiones de las matrices son compatibles
  * con las operaciones FMA.
  *

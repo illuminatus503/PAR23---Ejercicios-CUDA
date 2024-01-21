@@ -1,14 +1,9 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 
 #include "../../include/cuda/fma.cuh"
 #include "../../include/cuda/kernel_fma.cuh"
-
-#include "../../include/utils.h"
 #include "../../include/cuda/error.cuh"
 
 double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,

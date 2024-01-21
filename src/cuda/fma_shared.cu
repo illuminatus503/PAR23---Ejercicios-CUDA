@@ -1,9 +1,6 @@
 #include <cuda.h>
 #include <cuda_runtime.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
 #include "../../include/cuda/fma.cuh"
 #include "../../include/cuda/kernel_fma.cuh"
 #include "../../include/cuda/error.cuh"

@@ -1,14 +1,10 @@
-#include <stdio.h>
-#include <stdlib.h>
-
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_fp16.h>
 
 #include "../../include/cuda/fma.cuh"
 #include "../../include/cuda/kernel_fma.cuh"
-
-#include "../../include/utils.h"
+#include "../../include/cuda/kernel_linalg.cuh"
 #include "../../include/cuda/error.cuh"
 
 double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const float *C,
@@ -21,7 +17,6 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
     int i, j, k;
     int i_size, j_size, k_size;
     int i_size_padded, j_size_padded, k_size_padded;
-    int i_frag, j_frag, k_frag;
 
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
@@ -32,39 +27,25 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
         exit(EXIT_FAILURE);
     }
 
-    // Trasponemos B para matmul (accesos por filas en GPU)
-    float *Bt = (float *)malloc(sizeof(float) * K * N);
-    for (i = 0; i < K; i++)
-    {
-        for (j = 0; j < N; j++)
-        {
-            Bt[j * K + i] = B[i * N + j];
-        }
-    }
-
     // Calcular el tamaño de cada submatriz (considerando el padding si es necesario)
+    // Ajustamos el tamaño de cada fragmento al padding que sea necesario, por dimensión,
+    // para que sea múltiplo de 16.
     int Msub = (M + M_split - 1) / M_split;
-    Msub = (Msub + WMMA_M - 1) / WMMA_M * WMMA_M;
+    int max_i_size = (Msub + WMMA_M - 1) / WMMA_M * WMMA_M;
     int Nsub = (N + N_split - 1) / N_split;
-    Nsub = (Nsub + WMMA_N - 1) / WMMA_N * WMMA_N;
+    int max_j_size = (Nsub + WMMA_N - 1) / WMMA_N * WMMA_N;
     int Ksub = (K + K_split - 1) / K_split;
-    Ksub = (Ksub + WMMA_K - 1) / WMMA_K * WMMA_K;
-
-    // Reservamos e inicializamos matrices host con padding
-    float *A_sub_padded = (float *)calloc(Msub * Ksub, sizeof(float));
-    float *B_sub_padded = (float *)calloc(Ksub * Nsub, sizeof(float));
-    float *C_sub_padded = (float *)calloc(Msub * Nsub, sizeof(float));
+    int max_k_size = (Ksub + WMMA_K - 1) / WMMA_K * WMMA_K;
 
     // Reservamos buffers para los fragmentos de matrices en la GPU
-    float *d_C_sub;
-    half *d_A_sub, *d_B_sub;
-    float *d_A_sub_f32, *d_B_sub_f32;
+    half *d_A_sub_f16, *d_B_sub_f16;
+    float *d_A_sub_f32, *d_B_sub_f32, *d_C_sub;
 
-    gpuErrchk(cudaMalloc((void **)&d_A_sub_f32, Msub * Ksub * sizeof(float)));
-    gpuErrchk(cudaMalloc((void **)&d_B_sub_f32, Ksub * Nsub * sizeof(float)));
-    gpuErrchk(cudaMalloc((void **)&d_A_sub, Msub * Ksub * sizeof(half)));
-    gpuErrchk(cudaMalloc((void **)&d_B_sub, Ksub * Nsub * sizeof(half)));
-    gpuErrchk(cudaMalloc((void **)&d_C_sub, Msub * Nsub * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_A_sub_f32, max_i_size * max_k_size * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_B_sub_f32, max_k_size * max_j_size * sizeof(float)));
+    gpuErrchk(cudaMalloc((void **)&d_A_sub_f16, max_i_size * max_k_size * sizeof(half)));
+    gpuErrchk(cudaMalloc((void **)&d_B_sub_f16, max_k_size * max_j_size * sizeof(half)));
+    gpuErrchk(cudaMalloc((void **)&d_C_sub, max_i_size * max_j_size * sizeof(float)));
 
     // RUN distributed FMA with WMMA operations
     gpuErrchk(cudaEventRecord(start));
@@ -81,79 +62,54 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
             j_size = (j + Nsub > N) ? N - j : Nsub;
             j_size_padded = (j_size + WMMA_N - 1) / WMMA_N * WMMA_N;
 
-            // Inicializamos el fragmento de C_sub con padding
-            // Usamos bucles anidados en lugar de memset para mayor claridad
-            for (i_frag = 0; i_frag < Msub; ++i_frag)
-            {
-                for (j_frag = 0; j_frag < Nsub; ++j_frag)
-                {
-                    C_sub_padded[i_frag * Nsub + j_frag] = (i_frag < i_size && j_frag < j_size) ? C[(i + i_frag) * N + j + j_frag] : 0.0f;
-                }
-            }
-
-            // Copiamos datos de C_sub_padded a la memoria del dispositivo
+            // Inicializamos el fragmento C: copiamos solo los datos necesarios de C
+            gpuErrchk(cudaMemset((void *)d_C_sub, 0, max_i_size * max_j_size * sizeof(float)));
             gpuErrchk(cudaMemcpy((void *)d_C_sub,
-                                 (const void *)(C_sub_padded + i * Nsub + j),
-                                 i_size_padded * j_size_padded * sizeof(float),
+                                 (const void *)(C + i * Nsub + j),
+                                 i_size * j_size * sizeof(float),
                                  cudaMemcpyHostToDevice));
 
-            // Agregamos las multiplicaciones de matrices sucesivas
             for (k = 0; k < K; k += Ksub)
             {
                 k_size = (k + Ksub > K) ? K - k : Ksub;
                 k_size_padded = (k_size + WMMA_K - 1) / WMMA_K * WMMA_K;
 
-                // Inicializamos los fragmentos de A_sub y B_sub con padding
-                // Usamos bucles anidados en lugar de memset para mayor claridad
-                for (i_frag = 0; i_frag < Msub; i_frag++)
-                {
-                    for (k_frag = 0; k_frag < Ksub; k_frag++)
-                    {
-                        A_sub_padded[i_frag * Ksub + k_frag] = (i_frag < i_size && k_frag < k_size) ? A[(i + i_frag) * K + k + k_frag] : 0.0f;
-                    }
-                }
-
-                for (j_frag = 0; j_frag < Nsub; j_frag++)
-                {
-                    for (k_frag = 0; k_frag < Ksub; k_frag++)
-                    {
-                        B_sub_padded[j_frag * Ksub + k_frag] = (k_frag < k_size && j_frag < j_size) ? Bt[(j + j_frag) * K + k + k_frag] : 0.0f;
-                    }
-                }
-
-                // Copiamos y convertimos los fragmentos a half antes de enviarlos a d_A_sub y d_B_sub
+                // Inicializamos los fragmentos A y Bt (con padding)
+                gpuErrchk(cudaMemset((void *)d_A_sub_f32, 0, max_i_size * max_k_size * sizeof(float)));
+                gpuErrchk(cudaMemset((void *)d_B_sub_f32, 0, max_k_size * max_j_size * sizeof(float)));
                 gpuErrchk(cudaMemcpy((void *)d_A_sub_f32,
-                                     (const void *)A_sub_padded,
-                                     i_size_padded * k_size_padded * sizeof(float),
+                                     (const void *)(A + i * Ksub + k),
+                                     i_size * k_size * sizeof(float),
                                      cudaMemcpyHostToDevice));
                 gpuErrchk(cudaMemcpy((void *)d_B_sub_f32,
-                                     (const void *)B_sub_padded,
-                                     j_size_padded * k_size_padded * sizeof(float),
+                                     (const void *)(B + k * Nsub + j),
+                                     k_size * j_size * sizeof(float),
                                      cudaMemcpyHostToDevice));
 
-                // Convertimos los fragmentos a half antes de enviarlos a d_A_sub y d_B_sub
-                f32_to_f16<<<256, (i_size_padded * k_size_padded + 256 - 1) / 256>>>(d_A_sub, d_A_sub_f32, i_size_padded * k_size_padded);
+                // Convertimos los fragmentos A y B a half antes de operar
+                f32_to_f16<<<256, (max_i_size * max_k_size + 256 - 1) / 256>>>(d_A_sub_f16, d_A_sub_f32, max_i_size * max_k_size);
                 cudaCheckError();
-                f32_to_f16<<<256, (j_size_padded * k_size_padded + 256 - 1) / 256>>>(d_B_sub, d_B_sub_f32, j_size_padded * k_size_padded);
+                f32_to_f16<<<256, (max_k_size * max_j_size + 256 - 1) / 256>>>(d_B_sub_f16, d_B_sub_f32, max_k_size * max_j_size);
                 cudaCheckError();
                 gpuErrchk(cudaDeviceSynchronize());
 
                 // Realizamos la operación FMA en las submatrices
                 dim3 blockDim(WMMA_M, WMMA_N);
-                dim3 gridDim((i_size_padded + WMMA_M - 1) / WMMA_M, (j_size_padded + WMMA_N - 1) / WMMA_N);
-                cuda_fma_wmma_rows<<<gridDim, blockDim>>>(d_C_sub, d_A_sub, d_B_sub, i_size_padded, j_size_padded, k_size_padded, 1.0f, 1.0f);
+                dim3 gridDim((i_size_padded + WMMA_M - 1) / WMMA_M,
+                             (j_size_padded + WMMA_N - 1) / WMMA_N);
+                cuda_fma_wmma<<<gridDim, blockDim>>>(d_C_sub,
+                                                     d_A_sub_f16, d_B_sub_f16,
+                                                     max_i_size, max_j_size, max_k_size,
+                                                     1.0f, 1.0f);
                 cudaCheckError();
                 gpuErrchk(cudaDeviceSynchronize());
             }
 
             // Copiamos los resultados de vuelta del dispositivo y extraemos el fragmento sin padding a D
-            gpuErrchk(cudaMemcpy(C_sub_padded, d_C_sub, i_size_padded * j_size_padded * sizeof(float), cudaMemcpyDeviceToHost));
-            for (i_frag = 0; i_frag < i_size; ++i_frag)
-            {
-                memcpy(D + (i + i_frag) * N + j,
-                       C_sub_padded + i_frag * Nsub,
-                       j_size * sizeof(float));
-            }
+            gpuErrchk(cudaMemcpy((void *)(D + i * Nsub + j),
+                                 (const void *)d_C_sub,
+                                 i_size * j_size * sizeof(float),
+                                 cudaMemcpyDeviceToHost));
         }
     }
 
@@ -161,16 +117,11 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
 
-    gpuErrchk(cudaFree(d_A_sub));
-    gpuErrchk(cudaFree(d_B_sub));
+    gpuErrchk(cudaFree(d_A_sub_f16));
+    gpuErrchk(cudaFree(d_B_sub_f16));
     gpuErrchk(cudaFree(d_A_sub_f32));
     gpuErrchk(cudaFree(d_B_sub_f32));
     gpuErrchk(cudaFree(d_C_sub));
-
-    free(A_sub_padded);
-    free(B_sub_padded);
-    free(C_sub_padded);
-    free(Bt);
 
     return (double)exe_time_ms;
 }
