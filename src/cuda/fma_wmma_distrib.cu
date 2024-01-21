@@ -25,7 +25,7 @@ double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
 
     // Calculate submatrix sizes and pad to multiples of 16 for WMMA.
     int i, j, k;
-     int i_size, j_size, k_size;
+    int i_size, j_size, k_size;
     int max_i_size = ((M + M_split - 1) / M_split + WMMA_M - 1) / WMMA_M * WMMA_M;
     int max_j_size = ((N + N_split - 1) / N_split + WMMA_N - 1) / WMMA_N * WMMA_N;
     int max_k_size = ((K + K_split - 1) / K_split + WMMA_K - 1) / WMMA_K * WMMA_K;
