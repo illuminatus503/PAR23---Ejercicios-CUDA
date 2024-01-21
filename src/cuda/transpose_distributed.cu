@@ -72,11 +72,6 @@ double transpose_distributed(float *out, float *in,
                                        i_size * sizeof(float), j_size,
                                        cudaMemcpyDeviceToHost));
             }
-
-            // ! DEBUG print submatriz
-            // printf("Recogido de (%d, %d) en mat %d x %d; guardado en (%d, %d) en mat %d x %d\n",
-            //        i, j, M, N,
-            //        j, i, N, M);
         }
     }
 
