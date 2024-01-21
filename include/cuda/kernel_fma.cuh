@@ -28,4 +28,13 @@ __global__ void cuda_fma_wmma_rows(float *C, const half *A, const half *B,
                                    const int M, const int N, const int K,
                                    const float alpha, const float beta);
 
+/**
+ * @brief Cast from float32 to float16 (half).
+ *
+ * @param A_ Half vector, N elems.
+ * @param A Float vector, N elems.
+ * @param N
+ */
+__global__ void f32_to_f16(half *A_, const float *A, const int N);
+
 #endif

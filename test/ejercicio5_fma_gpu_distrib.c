@@ -9,7 +9,7 @@
 
 #define M 10
 #define N 10
-#define K 10
+#define K 4
 
 #define M_split 1 // si M_split => M, entonces, se toman filas de 1 en 1
 #define N_split 1 // si N_split => N, entonces, se toman columnas de 1 en 1
