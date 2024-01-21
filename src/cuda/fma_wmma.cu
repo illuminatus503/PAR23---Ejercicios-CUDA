@@ -93,6 +93,8 @@ double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaFree(d_A));
     gpuErrchk(cudaFree(d_B));
     gpuErrchk(cudaFree(d_C));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
 
     // Liberar la memoria de las matrices padded en el host
     free(A_padded);

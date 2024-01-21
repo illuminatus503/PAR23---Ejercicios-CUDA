@@ -117,11 +117,14 @@ double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const floa
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
 
+    // Free CUDA resources
     gpuErrchk(cudaFree(d_A_sub_f16));
     gpuErrchk(cudaFree(d_B_sub_f16));
     gpuErrchk(cudaFree(d_A_sub_f32));
     gpuErrchk(cudaFree(d_B_sub_f32));
     gpuErrchk(cudaFree(d_C_sub));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
 
     return (double)exe_time_ms;
 }

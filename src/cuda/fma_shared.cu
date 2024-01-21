@@ -45,6 +45,8 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
     gpuErrchk(cudaFree(d_A));
     gpuErrchk(cudaFree(d_B));
     gpuErrchk(cudaFree(d_C));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
 
     return (double)exe_time_ms;
 }
