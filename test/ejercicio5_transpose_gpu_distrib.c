@@ -7,10 +7,10 @@
 #include "../include/cuda/linalg.cuh"
 #include "../include/cuda/utils.cuh"
 
-#define M 1024
-#define N 128
+#define M 16
+#define N 4
 
-#define M_split 1 // si M_split => M, entonces, se toman filas de 1 en 1
+#define M_split 2 // si M_split => M, entonces, se toman filas de 1 en 1
 #define N_split 1 // si N_split => N, entonces, se toman columnas de 1 en 1
 
 #define TOL (float)1e-4
@@ -28,8 +28,11 @@ int main()
     printf("[+] Ejecutando prueba TRASPUESTA DISTRIBUÍDA con split (M, N) = (%d, %d)\n",
            M_split, N_split);
 
-    exe_time_ms = transpose_cuda(A_gpu, A, M, N, M_split, N_split);
-    exe_time_ms += transpose_cuda(A_gpu, A_gpu, N, M, N_split, M_split);
+    // exe_time_ms = transpose_cuda(A_gpu, A, M, N);
+    // exe_time_ms += transpose_cuda(A_gpu, A_gpu, N, M);
+
+    exe_time_ms = transpose_distributed(A_gpu, A, M, N, M_split, N_split);
+    exe_time_ms += transpose_distributed(A_gpu, A_gpu, N, M, N_split, M_split);
     exe_time_ms /= 2.0f;
 
     printf("GPU took %fms\n", exe_time_ms);

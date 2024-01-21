@@ -7,7 +7,7 @@
 #include "../include/utils.h"
 #include "../include/fma.h"
 
-double fma_cpu_distrib(float *D, const float *A, const float *B, const float *C,
+double fma_cpu_distrib(float *D, float *A, float *B, float *C,
                        const int M, const int N, const int K,
                        const int M_split, const int N_split, const int K_split)
 {

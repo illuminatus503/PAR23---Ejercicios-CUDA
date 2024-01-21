@@ -5,7 +5,7 @@
 
 #include "../include/utils.h"
 
-double timing_cpu(struct timespec begin, struct timespec end)
+double timing_cpu(const struct timespec begin, const struct timespec end)
 {
     return ((end.tv_sec - begin.tv_sec) * 1e3 + ((end.tv_nsec - begin.tv_nsec) * 1e-6));
 }
@@ -51,7 +51,7 @@ bool matrix_checkdims(int N1, int M1, int N2, int M2, int N3, int M3, int N, int
     return 1;
 }
 
-void print_mat(float *A_, int N, int M)
+void print_mat(const float *A_, int N, int M)
 {
     int i, j;
 
@@ -65,7 +65,7 @@ void print_mat(float *A_, int N, int M)
     }
 }
 
-void print_split(float *A, const int M, const int N,
+void print_split(const float *A, const int M, const int N,
                  const int M_split, const int N_split)
 {
     int i, j;
@@ -104,7 +104,7 @@ void print_split(float *A, const int M, const int N,
     printf("\n");
 }
 
-float matrix_infty_dist(float *A_, float *B_, int N, int M)
+float matrix_infty_dist(const float *A_, const float *B_, int N, int M)
 {
     int i, j;
 
@@ -128,10 +128,10 @@ float matrix_infty_dist(float *A_, float *B_, int N, int M)
     return infty_norm;
 }
 
-float mse(float *A_, float *B_, int rows, int cols)
+float mse(const float *A_, const float *B_, const int M, const int N)
 {
     float error = 0.0;
-    int size = rows * cols;
+    int size = M * N;
 
     for (int i = 0; i < size; i++)
     {

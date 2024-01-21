@@ -7,7 +7,7 @@
 #include "../include/utils.h"
 #include "../include/fma.h"
 
-double fma_cpu(float *D, const float *A, const float *B, const float *C,
+double fma_cpu(float *D, float *A, float *B, float *C,
                const int M, const int N, const int K)
 {
     int i, j, k;

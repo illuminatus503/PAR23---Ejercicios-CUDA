@@ -58,7 +58,7 @@ bool matrix_checkdims(int N1, int M1,
  * @param M
  * @return float La norma infinito de la diferencia de A y B.
  */
-float matrix_infty_dist(float *A_, float *B_, int N, int M);
+float matrix_infty_dist(const float *A_, const float *B_, const int N, const int M);
 
 /**
  * @brief Imprime una matriz por pantalla, siempre que esté en memoria.
@@ -67,7 +67,7 @@ float matrix_infty_dist(float *A_, float *B_, int N, int M);
  * @param N
  * @param M
  */
-void print_mat(float *A_, int N, int M);
+void print_mat(const float *A_, const int N, const int M);
 
 /**
  * @brief Timing in CPU.
@@ -76,7 +76,7 @@ void print_mat(float *A_, int N, int M);
  * @param end End measurement
  * @return double Elapsed time between measurements, in ms.
  */
-double timing_cpu(struct timespec begin, struct timespec end);
+double timing_cpu(const struct timespec begin, const struct timespec end);
 
 /**
  * @brief Mean Squeared Error (MSE). Calculamos el error cuadrático
@@ -84,11 +84,11 @@ double timing_cpu(struct timespec begin, struct timespec end);
  *
  * @param A_ matriz de float
  * @param B_ matriz de float
- * @param rows filas
- * @param cols columnas
+ * @param M filas
+ * @param N columnas
  * @return float El MSE entre ambas
  */
-float mse(float *A_, float *B_, int rows, int cols);
+float mse(const float *A_, const float *B_, const int M, const int N);
 
 /**
  * @brief Muestra cómo quedaría la partición de una matriz,
@@ -100,7 +100,7 @@ float mse(float *A_, float *B_, int rows, int cols);
  * @param M_split Número de filas por las que dividir: M / M_split
  * @param N_split Número de columnas por las que dividir: N / N_split
  */
-void print_split(float *A, const int M, const int N,
+void print_split(const float *A, const int M, const int N,
                  const int M_split, const int N_split);
 
 /**

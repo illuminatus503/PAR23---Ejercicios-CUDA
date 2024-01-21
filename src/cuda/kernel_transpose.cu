@@ -3,7 +3,7 @@
 
 #include "../../include/cuda/kernel_linalg.cuh"
 
-__global__ void cuda_transpose(float *odata, const float *idata, const int width, const int height)
+__global__ void cuda_transpose(float *odata, float *idata, const int width, const int height)
 {
     __shared__ float tile[TILE_DIM][TILE_DIM + 1]; // +1 para evitar conflictos de bancos en memoria compartida
 

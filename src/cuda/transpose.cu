@@ -5,8 +5,7 @@
 #include "../../include/cuda/kernel_linalg.cuh"
 #include "../../include/cuda/linalg.cuh"
 
-double transpose_cuda(float *out, const float *in, const int M, const int N,
-                      const int M_split, const int N_split)
+double transpose_cuda(float *out, float *in, const int M, const int N)
 {
     // Eventos para medir el tiempo
     cudaEvent_t start, stop;

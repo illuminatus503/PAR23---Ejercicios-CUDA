@@ -13,7 +13,7 @@
  * @param K
  * @return double tiempo de ejecución en milisegundos
  */
-double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
+double fma_gpu_global(float *D, float *A, float *B, float *C,
                       const int M, const int N, const int K);
 
 /**
@@ -28,7 +28,7 @@ double fma_gpu_global(float *D, const float *A, const float *B, const float *C,
  * @param K
  * @return double tiempo de ejecución en milisegundos
  */
-double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
+double fma_gpu_shared(float *D, float *A, float *B, float *C,
                       const int M, const int N, const int K);
 
 /**
@@ -43,7 +43,7 @@ double fma_gpu_shared(float *D, const float *A, const float *B, const float *C,
  * @param K
  * @return double tiempo de ejecución en milisegundos
  */
-double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
+double fma_wmma_gpu(float *D, float *A, float *B, float *C,
                     const int M, const int N, const int K);
 
 /**
@@ -62,7 +62,7 @@ double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
  * @param K_split division of K dimension. If K_split >= K, process 1 row/col. from A or B, per stream
  * @return double execution time, in miliseconds.
  */
-double fma_wmma_gpu_distrib(float *D, const float *A, const float *B, const float *C,
+double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
                             const int M, const int N, const int K,
                             const int M_split, const int N_split, const int K_split);
 

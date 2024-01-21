@@ -6,7 +6,7 @@
 #include "../../include/cuda/kernel_fma.cuh"
 #include "../../include/cuda/error.cuh"
 
-double fma_wmma_gpu(float *D, const float *A, const float *B, const float *C,
+double fma_wmma_gpu(float *D, float *A, float *B, float *C,
                     const int M, const int N, const int K)
 {
     cudaEvent_t start, stop;

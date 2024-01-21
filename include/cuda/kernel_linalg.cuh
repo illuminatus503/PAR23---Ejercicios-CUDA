@@ -13,6 +13,6 @@
  * @param M
  * @param N
  */
-__global__ void cuda_transpose(float *odata, const float *idata, const int M, const int N);
+__global__ void cuda_transpose(float *odata, float *idata, const int M, const int N);
 
 #endif

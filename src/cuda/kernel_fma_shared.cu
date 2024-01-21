@@ -1,6 +1,6 @@
 #include "../../include/cuda/kernel_fma.cuh"
 
-__global__ void cuda_fma_shared(float *C, const float *A, const float *B,
+__global__ void cuda_fma_shared(float *C, float *A, float *B,
                                 const int M, const int N, const int K,
                                 const float alpha, const float beta)
 {
