@@ -45,7 +45,7 @@ double transpose_distributed(float *out, float *in,
             j_size = (j + max_j_size >= N) ? N - j : max_j_size;
 
             // Copiamos los datos necesarios
-            gpuErrchk(cudaMemcpy2D((void *)d_in_sub, max_j_size * sizeof(float),
+            gpuErrchk(cudaMemcpy2D((void *)d_in_sub, j_size * sizeof(float),
                                    (const void *)(in + i * N + j), N * sizeof(float),
                                    j_size * sizeof(float), i_size,
                                    cudaMemcpyHostToDevice));
@@ -62,7 +62,7 @@ double transpose_distributed(float *out, float *in,
             // Almacenamos el bloque de memoria en host, pero en la traspuesta
             // (traspuesta por bloques)
             gpuErrchk(cudaMemcpy2D((void *)(out + j * M + i), M * sizeof(float),
-                                   (const void *)d_out_sub, max_i_size * sizeof(float),
+                                   (const void *)d_out_sub, i_size * sizeof(float),
                                    i_size * sizeof(float), j_size,
                                    cudaMemcpyDeviceToHost));
 

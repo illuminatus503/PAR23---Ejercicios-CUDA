@@ -7,11 +7,11 @@
 #include "../include/cuda/linalg.cuh"
 #include "../include/cuda/utils.cuh"
 
-#define M 10
-#define N 5
+#define M 100
+#define N 60
 
-#define M_split 3 // si M_split => M, entonces, se toman filas de 1 en 1
-#define N_split 2 // si N_split => N, entonces, se toman columnas de 1 en 1
+#define M_split 10 // si M_split => M, entonces, se toman filas de 1 en 1
+#define N_split 1 // si N_split => N, entonces, se toman columnas de 1 en 1
 
 #define TOL (float)1e-4
 
