@@ -7,7 +7,7 @@ CC_FLAGS = -Wall -g -O2 -I$(INC_DIR) -fopenmp -DDEBUG
 CC_LIBS = -lm
 # NVCC compiler options:
 NVCC = nvcc
-NVCC_FLAGS = -O2 -I$(INC_DIR) -arch sm_75
+NVCC_FLAGS = -O2 -I$(INC_DIR) -arch sm_75 -DDEBUG
 NVCC_LIBS = -lm
 # CUDA library directory:
 CUDA_LIB_DIR = -L$(CUDA_ROOT_DIR)/lib64

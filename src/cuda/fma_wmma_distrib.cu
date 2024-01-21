@@ -11,11 +11,13 @@ double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
                             const int M, const int N, const int K,
                             const int M_split, const int N_split, const int K_split)
 {
-    cudaEvent_t start, stop;
     float exe_time_ms = 0.0;
 
+#ifdef DEBUG
+    cudaEvent_t start, stop;
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
+#endif
 
     if (M_split <= 0 || N_split <= 0 || K_split <= 0)
     {
@@ -39,7 +41,9 @@ double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
     gpuErrchk(cudaMalloc(&d_B_sub_f16, max_k_size * max_j_size * sizeof(half)));
     gpuErrchk(cudaMalloc(&d_C_sub, max_i_size * max_j_size * sizeof(float)));
 
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(start));
+#endif
 
     for (i = 0; i < M; i += max_i_size)
     {
@@ -94,9 +98,13 @@ double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
         }
     }
 
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(stop));
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
+#endif
 
     // Free CUDA resources.
     gpuErrchk(cudaFree(d_A_sub_f16));
@@ -104,8 +112,6 @@ double fma_wmma_gpu_distrib(float *D, float *A, float *B, float *C,
     gpuErrchk(cudaFree(d_A_sub_f32));
     gpuErrchk(cudaFree(d_B_sub_f32));
     gpuErrchk(cudaFree(d_C_sub));
-    gpuErrchk(cudaEventDestroy(start));
-    gpuErrchk(cudaEventDestroy(stop));
 
     return (double)exe_time_ms;
 }

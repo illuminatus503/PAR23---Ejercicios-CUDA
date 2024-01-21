@@ -9,14 +9,15 @@
 double fma_wmma_gpu(float *D, float *A, float *B, float *C,
                     const int M, const int N, const int K)
 {
-    cudaEvent_t start, stop;
-    float exe_time_ms = 0.0;
-
-    gpuErrchk(cudaEventCreate(&start));
-    gpuErrchk(cudaEventCreate(&stop));
-
     half *d_A, *d_B;
     float *d_C;
+    float exe_time_ms = 0.0;
+
+#ifdef DEBUG
+    cudaEvent_t start, stop;
+    gpuErrchk(cudaEventCreate(&start));
+    gpuErrchk(cudaEventCreate(&stop));
+#endif
 
     // Calculamos el espacio de las matrices padded en el dispositivo
     const int M_padded = (M + WMMA_M - 1) / WMMA_M * WMMA_M;
@@ -69,16 +70,29 @@ double fma_wmma_gpu(float *D, float *A, float *B, float *C,
     dim3 gridDim((M_padded + (WMMA_M * blockDim.x / WARP_SIZE - 1)) / (WMMA_M * blockDim.x / WARP_SIZE),
                  (N_padded + WMMA_N * blockDim.y - 1) / (WMMA_N * blockDim.y));
 
-    // Launch kernel
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(start));
+#endif
+
+    // Launch kernel
     cuda_fma_wmma<<<gridDim, blockDim>>>(d_C, d_B, d_A, M_padded, N_padded, K_padded, 1.0f, 1.0f);
     cudaCheckError();
+
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(stop));
+#else
+    gpuErrchk(cudaDeviceSynchronize());
+#endif
 
     // Copy data from device array to host array
     gpuErrchk(cudaMemcpy((void *)C_padded, (const void *)d_C, M_padded * N_padded * sizeof(float), cudaMemcpyDeviceToHost));
+
+#ifdef DEBUG
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&exe_time_ms, start, stop));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
+#endif
 
     // Recuperamos los datos a la matriz D original (sin padding)
     for (int i = 0; i < M; ++i)
@@ -93,8 +107,6 @@ double fma_wmma_gpu(float *D, float *A, float *B, float *C,
     gpuErrchk(cudaFree(d_A));
     gpuErrchk(cudaFree(d_B));
     gpuErrchk(cudaFree(d_C));
-    gpuErrchk(cudaEventDestroy(start));
-    gpuErrchk(cudaEventDestroy(stop));
 
     // Liberar la memoria de las matrices padded en el host
     free(A_padded);

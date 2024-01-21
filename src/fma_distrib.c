@@ -17,7 +17,9 @@ double fma_cpu_distrib(float *D, float *A, float *B, float *C,
 
     float *A_sub, *B_sub, *C_sub, *D_sub;
 
+#ifdef DEBUG
     struct timespec begin, end;
+#endif
 
     if (M_split <= 0 || N_split <= 0 || K_split <= 0)
     {
@@ -30,8 +32,10 @@ double fma_cpu_distrib(float *D, float *A, float *B, float *C,
     int Nsub = (N + N_split - 1) / N_split;
     int Ksub = (K + K_split - 1) / K_split;
 
-    // ! Operación FMA distribuída
+// ! Operación FMA distribuída
+#ifdef DEBUG
     clock_gettime(CLOCK_MONOTONIC, &begin);
+#endif
 
     for (i = 0; i < M; i += Msub)
     {
@@ -81,7 +85,10 @@ double fma_cpu_distrib(float *D, float *A, float *B, float *C,
         }
     }
 
+#ifdef DEBUG
     clock_gettime(CLOCK_MONOTONIC, &end);
-
     return timing_cpu(begin, end);
+#else
+    return 0.0;
+#endif
 }

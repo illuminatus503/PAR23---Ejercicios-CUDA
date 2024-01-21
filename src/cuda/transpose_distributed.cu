@@ -11,11 +11,13 @@ double transpose_distributed(float *out, float *in,
                              const int M, const int N,
                              const int M_split, const int N_split)
 {
-    // Eventos para medir el tiempo
+    float milliseconds = 0;
+
+#ifdef DEBUG
     cudaEvent_t start, stop;
     gpuErrchk(cudaEventCreate(&start));
     gpuErrchk(cudaEventCreate(&stop));
-    float milliseconds = 0;
+#endif
 
     if (M_split <= 0 || N_split <= 0)
     {
@@ -34,7 +36,9 @@ double transpose_distributed(float *out, float *in,
     gpuErrchk(cudaMalloc((void **)&d_in_sub, max_i_size * max_j_size * sizeof(float)));
     gpuErrchk(cudaMalloc((void **)&d_out_sub, max_j_size * max_i_size * sizeof(float)));
 
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(start));
+#endif
 
     for (i = 0; i < M; i += max_i_size)
     {
@@ -75,17 +79,19 @@ double transpose_distributed(float *out, float *in,
         }
     }
 
-    gpuErrchk(cudaDeviceSynchronize());
-
+#ifdef DEBUG
     gpuErrchk(cudaEventRecord(stop));
     gpuErrchk(cudaEventSynchronize(stop));
     gpuErrchk(cudaEventElapsedTime(&milliseconds, start, stop));
+    gpuErrchk(cudaEventDestroy(start));
+    gpuErrchk(cudaEventDestroy(stop));
+#else
+    gpuErrchk(cudaDeviceSynchronize());
+#endif
 
     // Libera la memoria de las matrices en la GPU y destruye los eventos
     gpuErrchk(cudaFree(d_in_sub));
     gpuErrchk(cudaFree(d_out_sub));
-    gpuErrchk(cudaEventDestroy(start));
-    gpuErrchk(cudaEventDestroy(stop));
 
     return (double)milliseconds;
 }
