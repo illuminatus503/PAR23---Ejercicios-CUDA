@@ -8,7 +8,7 @@
 #include "../include/cuda/utils.cuh"
 
 #define M 10
-#define N 10
+#define N 9
 #define K 4
 
 #define M_split 1 // si M_split => M, entonces, se toman filas de 1 en 1
